@@ -1,44 +1,38 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { FiLogOut } from "react-icons/fi";
+import { FiClock, FiCalendar, FiCheckCircle, FiUserPlus, FiLogOut, FiHome } from "react-icons/fi";
 
-function Sidebar() {
-  return (
-    <div className="bg-[#3b0764] text-white h-screen w-64 p-4 flex flex-col">
-      {/* Logo Section */}
-      <div className="text-large font-bold mb-8">
-        Pro<span className="text-[#bef264]">Design</span>
-      </div>
 
-      {/* Navigation Links */}
-      <nav className="flex flex-col space-y-4">
-        {/* Dashboard Link */}
-        <Link
-          to="/dashboard"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          Dashboard
-        </Link>
+const Sidebar = () => {
+    return (
+        <div className="w-64 bg-[#3b0764] text-white flex flex-col p-6">
+        <div className="text-large font-bold mb-8">
+            Pro<span className="text-[#bef264]">Design</span>
+        </div>
+        <nav className="flex flex-col gap-4">
+            <a href="/dashboard" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
+            <FiHome className="text-xl" /> Home
+            </a>
+            <a href="/members" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
+            <FiUserPlus className="text-xl" /> Request Member
+            </a>
+            <a href="/tasks" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
+            <FiCheckCircle className="text-xl" /> Assigned Tasks
+            </a>
+            <a href="/time" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
+            <FiClock className="text-xl" /> Time Tracking
+            </a>
+            <a href="calendar" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
+            <FiCalendar className="text-xl" /> Calendar Integration
+            </a>
+        </nav>
+        <div className="mt-auto">
+            <button className="flex items-center gap-2 p-2 bg-[#bef264] hover:bg-[#bef264] rounded w-full text-black">
+            <FiLogOut className="text-xl" /> Logout
+            </button>
+        </div>
+        </div>
+    );
+    };
 
-        {/* User Requests Link */}
-        <Link
-          to="/dashboard/user-request"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          User Request
-        </Link>
-
-        {/* Logout Link */}
-        <Link
-          to="/logout"
-          className="flex items-center space-x-2 hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          <FiLogOut size={20} />
-          <span>Logout</span>
-        </Link>
-      </nav>
-    </div>
-  );
-}
 
 export default Sidebar;

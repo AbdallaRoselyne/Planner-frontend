@@ -1,68 +1,37 @@
 import React from "react";
+import { FiUsers, FiClipboard, FiDollarSign, FiBarChart2, FiLogOut, FiHome } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { FiLogOut } from "react-icons/fi";
 
-function Adminsidebar() {
+const AdminSidebar = () => {
   return (
-    <div className="bg-[#3b0764] text-white h-screen w-64 p-4 flex flex-col">
-      {/* Logo Section */}
-      <div className="text-large font-bold mb-8">
+    <div className="w-64 bg-[#3b0764] text-white flex flex-col p-6">
+    <div className="text-large font-bold mb-8">
         Pro<span className="text-[#bef264]">Design</span>
-      </div>
-
-      {/* Navigation Links */}
-      <nav className="flex flex-col space-y-4">
-        {/* Dashboard Link */}
-        <Link
-          to="/admin"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          Dashboard
+    </div>
+      <nav className="flex flex-col gap-4">
+        <Link to="/admin/dashboard" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
+          <FiHome className="text-xl" /> Dashboard
         </Link>
-
-        {/* User Requests Link */}
-        <Link
-          to="/admin/Resources"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          Resources
+        <Link to="/admin/users" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
+          <FiUsers className="text-xl" /> Manage Users & Teams
         </Link>
-
-       {/* Users Link */} 
-        <Link
-          to="/admin/Users"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          Users
+        <Link to="/admin/tasks" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
+          <FiClipboard className="text-xl" /> Approve Task Requests
         </Link>
-
-        {/* Project Link */}
-        <Link
-          to="/admin/Projects"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          Projects
+        <Link to="/admin/budget" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
+          <FiDollarSign className="text-xl" /> Budget & Time Tracking
         </Link>
-
-        {/* Attendance */}
-        <Link
-          to="/admin/Attendance"
-          className="hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          Attendance
-        </Link>
-
-        {/* Logout Link */}
-        <Link
-          to="/adminlogout"
-          className="flex items-center space-x-2 hover:bg-[#bef264] hover:text-[#3b0764] px-4 py-2 rounded transition-colors"
-        >
-          <FiLogOut size={20} />
-          <span>Logout</span>
+        <Link to="/admin/reports" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
+          <FiBarChart2 className="text-xl" /> Reports & Analytics
         </Link>
       </nav>
+      <div className="mt-auto">
+        <button className="flex items-center gap-2 p-2 bg-[#bef264] hover:bg-[#a3d133] rounded w-full text-black">
+          <FiLogOut className="text-xl" /> Logout
+        </button>
+      </div>
     </div>
   );
-}
+};
 
-export default Adminsidebar;
+export default AdminSidebar;

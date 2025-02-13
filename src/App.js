@@ -6,77 +6,48 @@ import {
   useLocation,
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Sidebar from "./components/Users/Sidebar";
+import AdminSidebar from "./components/Admin/adminSidebar";
 import AboutUs from "./components/AboutUs";
 import Login from "./components/Auth/Login";
 import SignUp from "./components/Auth/SignUp";
-import Sidebar from "./components/Users/Sidebar";
-import UserRequestForm from "./components/Users/UserRequestForm";
-import Adminsidebar from "./components/Admin/Adminsidebar";
-import Plannersidebar from "./components/Planners/PlannerDashboard";
+import UserDashboard from "./components/Users/UserDashboard";
+import MembersPage from "./components/Users/members";
+import TasksPage from "./components/Users/tasks";
+import TimeTrackingPage from "./components/Users/time";
+import CalendarPage from "./components/Users/calendar";
+import AdminDashboard from "./components/Admin/adminDashboard";
+import AdminMembers from "./components/Admin/adminMembers";
+import ApproveTaskRequests from "./components/Admin/adminTasks";
+import BudgetTimeTracking from "./components/Admin/adminBudget";
+import ReportsAnalytics from "./components/Admin/adminReports";
 
-
-function Layout({ children }) {
-  const location = useLocation();
-  const showNavbar = location.pathname === "/";
-
+/*Layout for About Us Page */
+function AboutUsLayout({ children }) {
   return (
     <div>
-      {showNavbar && <Navbar />}
+      <Navbar />
       {children}
     </div>
   );
 }
 
-function DashboardLayout({ children, welcomeMessage, description }) {
+/* Layout for User Pages */
+function UserLayout({ children }) {
   return (
-    <div className="flex">
+    <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 p-4">
-        {/* Welcome message and description */}
-        <div className="mb-6 bg-[#f3f4f6] p-4 rounded shadow">
-          <h1 className="text-2xl font-bold text-[#3b0764]">
-            {welcomeMessage}
-          </h1>
-          <p className="text-gray-600">{description}</p>
-        </div>
-        {children}
-      </div>
+      <div className="flex-1 ">{children}</div>
     </div>
   );
 }
 
-function AdminDashboardLayout({ children, welcomeMessage, description }) {
+/* Layout for Admin Pages */
+function AdminLayout({ children }) {
   return (
-    <div className="flex">
-      <Adminsidebar />
-      <div className="flex-1 p-4">
-        {/* Welcome message and description */}
-        <div className="mb-6 bg-[#f3f4f6] p-4 rounded shadow">
-          <h1 className="text-2xl font-bold text-[#3b0764]">
-            {welcomeMessage}
-          </h1>
-          <p className="text-gray-600">{description}</p>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function PlannerDashboardLayout({ children, welcomeMessage, description }) {
-  return (
-    <div className="flex">
-      <Plannersidebar />
-      <div className="flex-1 p-4">
-        {/* Welcome message and description */}
-        <div className="mb-6 bg-[#f3f4f6] p-4 rounded shadow">
-          <h1 className="text-2xl font-bold text-[#3b0764]">
-            {welcomeMessage}
-          </h1>
-          <p className="text-gray-600">{description}</p>
-        </div>
-        {children}
-      </div>
+    <div className="flex h-screen">
+      <AdminSidebar />
+      <div className="flex-1 ">{children}</div>
     </div>
   );
 }
@@ -84,67 +55,106 @@ function PlannerDashboardLayout({ children, welcomeMessage, description }) {
 function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<AboutUs />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <AboutUsLayout>
+              <AboutUs />
+            </AboutUsLayout>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
 
-          {/* Dashboard Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <DashboardLayout
-                welcomeMessage="Welcome to the Dashboard"
-                description="Here you can manage all your projects and track their progress."
-              >
-                <h2 className="text-lg text-gray-700">
-                  This is your dashboard overview.
-                </h2>
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/dashboard/user-request"
-            element={
-              <DashboardLayout
-                welcomeMessage="User Requests"
-                description="Manage and track user requests for resources below."
-              >
-                <UserRequestForm />
-              </DashboardLayout>
-            }
-          />
-           <Route
-            path="/admin"
-            element={
-              <AdminDashboardLayout
-                welcomeMessage="Welcome to the Admin Dashboard"
-                description="Here you can manage all your projects and track their progress."
-              >
-                <h2 className="text-lg text-gray-700">
-                  This is your dashboard overview.
-                </h2>
-              </AdminDashboardLayout>
-            }
-          />
+        {/* User Routes - Uses User Sidebar */}
+        <Route
+          path="/dashboard"
+          element={
+            <UserLayout>
+              <UserDashboard />
+            </UserLayout>
+          }
+        />
+        <Route
+          path="/members"
+          element={
+            <UserLayout>
+              <MembersPage />
+            </UserLayout>
+          }
+        />
+        <Route
+          path="/tasks"
+          element={
+            <UserLayout>
+              <TasksPage />
+            </UserLayout>
+          }
+        />
+        <Route
+          path="/time"
+          element={
+            <UserLayout>
+              <TimeTrackingPage />
+            </UserLayout>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <UserLayout>
+              <CalendarPage />
+            </UserLayout>
+          }
+        />
 
-          <Route
-            path="/planner"
-            element={
-              <PlannerDashboardLayout
-                welcomeMessage="Welcome to the Planner Dashboard"
-                description="Here you can manage all your projects and track their progress."
-              >
-                <h2 className="text-lg text-gray-700">
-                  This is your dashboard overview.
-                </h2>
-              </PlannerDashboardLayout>
-            }
-          />
-        </Routes>
-      </Layout>
+        {/* Admin Routes - Uses Admin Sidebar */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <AdminLayout>
+              <AdminMembers />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/tasks"
+          element={
+            <AdminLayout>
+              <ApproveTaskRequests />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/budget"
+          element={
+            <AdminLayout>
+              <BudgetTimeTracking />
+            </AdminLayout>
+          }
+        />
+
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminLayout>
+              <ReportsAnalytics />
+            </AdminLayout>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
