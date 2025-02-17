@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiUserPlus, FiUserCheck, FiUserX, FiX, FiEdit } from "react-icons/fi";
 
 const AdminMembers = () => {
@@ -9,73 +9,124 @@ const AdminMembers = () => {
     name: "",
     email: "",
     jobTitle: "",
-    role: "",
     department: "",
     billableRate: "",
   });
 
-  const [members, setMembers] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "jon@gmail.com",
-      jobTitle: "Software Developer",
-      role: "Developer",
-      department: "LEED",
-      billableRate: "500",
-    },
-    {
-      id: 2,
-      name: "Alice Smith",
-      email: "alice@gmail.com",
-      jobTitle: "Project Manager",
-      role: "Manager",
-      department: "IT",
-      billableRate: "600",
-    },
-  ]);
+  const [members, setMembers] = useState([]);
+
+  // Fetch members from the backend
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/members");
+        if (response.ok) {
+          const data = await response.json();
+          setMembers(data);
+        }
+      } catch (error) {
+        console.error("Error fetching members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, []);
 
   const handleChange = (e) => {
     setNewMember({ ...newMember, [e.target.name]: e.target.value });
   };
 
-  const handleAddMember = () => {
-    if (!newMember.name || !newMember.email) return;
-    setMembers([...members, { id: members.length + 1, ...newMember }]);
-    setNewMember({
-      name: "",
-      email: "",
-      jobTitle: "",
-      role: "",
-      department: "",
-      billableRate: "",
-    });
-    setShowModal(false);
+  const handleAddMember = async () => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@prodesign\.mu$/;
+    if (!emailPattern.test(newMember.email)) {
+      alert("Email must be a @prodesign.mu address.");
+      return;
+    }
+
+    if (!newMember.name || !newMember.email || !newMember.jobTitle || !newMember.department) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const payload = {
+      ...newMember,
+      billableRate: Number(newMember.billableRate),
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const savedMember = await response.json();
+        setMembers([...members, savedMember]);
+        setNewMember({
+          name: "",
+          email: "",
+          jobTitle: "",
+          department: "",
+          billableRate: "",
+        });
+        setShowModal(false);
+      } else {
+        const error = await response.json();
+        alert(`Failed to add member: ${error.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error adding member:", error);
+    }
   };
 
-  const handleEditMember = () => {
+  const handleEditMember = async () => {
     if (!selectedMember) return;
-    setMembers(
-      members.map((member) =>
-        member.id === selectedMember.id ? selectedMember : member
-      )
-    );
-    setEditModal(false);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/members/${selectedMember._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(selectedMember),
+        }
+      );
+
+      if (response.ok) {
+        const updatedMember = await response.json();
+        setMembers(
+          members.map((member) =>
+            member._id === updatedMember._id ? updatedMember : member
+          )
+        );
+        setEditModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating member:", error);
+    }
   };
 
-  const handleRemoveMember = (id) => {
+  const handleRemoveMember = async (id) => {
     if (window.confirm("Are you sure you want to remove this member?")) {
-      setMembers(members.filter((member) => member.id !== id));
+      try {
+        const response = await fetch(`http://localhost:5000/api/members/${id}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          setMembers(members.filter((member) => member._id !== id));
+        }
+      } catch (error) {
+        console.error("Error removing member:", error);
+      }
     }
   };
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      {/* Header */}
       <div className="flex justify-between items-center bg-white p-4 shadow rounded-lg mb-6">
-        <h1 className="text-2xl font-bold text-[#3b0764]">
-          Manage Users & Teams
-        </h1>
+        <h1 className="text-2xl font-bold text-[#3b0764]">Manage Users & Teams</h1>
         <button
           className="bg-[#3b0764] text-white px-4 py-2 rounded-lg hover:bg-[#540a84] flex items-center gap-2"
           onClick={() => setShowModal(true)}
@@ -84,7 +135,6 @@ const AdminMembers = () => {
         </button>
       </div>
 
-      {/* Members List */}
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Team Members</h2>
         <table className="w-full border-collapse">
@@ -93,7 +143,6 @@ const AdminMembers = () => {
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Email</th>
               <th className="text-left p-2">Job Title</th>
-              <th className="text-left p-2">Role</th>
               <th className="text-left p-2">Department</th>
               <th className="text-left p-2">Billable Rate</th>
               <th className="text-left p-2">Actions</th>
@@ -101,11 +150,10 @@ const AdminMembers = () => {
           </thead>
           <tbody>
             {members.map((user) => (
-              <tr key={user.id} className="border-t">
+              <tr key={user._id} className="border-t">
                 <td className="p-2">{user.name}</td>
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.jobTitle}</td>
-                <td className="p-2">{user.role}</td>
                 <td className="p-2">{user.department}</td>
                 <td className="p-2">{user.billableRate}</td>
                 <td className="p-2 flex gap-2">
@@ -120,7 +168,7 @@ const AdminMembers = () => {
                   </button>
                   <button
                     className="text-red-600 hover:text-red-800 flex items-center gap-1"
-                    onClick={() => handleRemoveMember(user.id)}
+                    onClick={() => handleRemoveMember(user._id)}
                   >
                     <FiUserX /> Remove
                   </button>
@@ -131,14 +179,11 @@ const AdminMembers = () => {
         </table>
       </div>
 
-      {/* Add Member Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-[#3b0764]">
-                Add New Member
-              </h2>
+              <h2 className="text-xl font-bold text-[#3b0764]">Add New Member</h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-600 hover:text-gray-900"
@@ -161,7 +206,7 @@ const AdminMembers = () => {
                 name="email"
                 value={newMember.email}
                 onChange={handleChange}
-                placeholder="Email"
+                placeholder="Email (must be @prodesign.mu)"
                 className="w-full p-2 border rounded"
               />
               <input
@@ -172,22 +217,18 @@ const AdminMembers = () => {
                 placeholder="Job Title"
                 className="w-full p-2 border rounded"
               />
-              <input
-                type="text"
-                name="role"
-                value={newMember.role}
-                onChange={handleChange}
-                placeholder="Role"
-                className="w-full p-2 border rounded"
-              />
-              <input
-                type="text"
+              <select
                 name="department"
                 value={newMember.department}
                 onChange={handleChange}
-                placeholder="Department"
                 className="w-full p-2 border rounded"
-              />
+              >
+                <option value="">Select Department</option>
+                <option>BIM</option>
+                <option>ADMIN</option>
+                <option>LEED</option>
+                <option>MEP</option>
+              </select>
               <input
                 type="number"
                 name="billableRate"
@@ -216,7 +257,6 @@ const AdminMembers = () => {
         </div>
       )}
 
-      {/* Edit Member Modal */}
       {editModal && selectedMember && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -231,25 +271,46 @@ const AdminMembers = () => {
             </div>
 
             <div className="space-y-3">
-              {Object.keys(selectedMember).map(
-                (key) =>
-                  key !== "id" && (
-                    <input
+              {Object.keys(selectedMember).map((key) => {
+                if (key === "_id") return null;
+                if (key === "department") {
+                  return (
+                    <select
                       key={key}
-                      type="text"
-                      name={key}
-                      value={selectedMember[key]}
+                      name="department"
+                      value={selectedMember.department}
                       onChange={(e) =>
                         setSelectedMember({
                           ...selectedMember,
-                          [key]: e.target.value,
+                          department: e.target.value,
                         })
                       }
-                      placeholder={key}
                       className="w-full p-2 border rounded"
-                    />
-                  )
-              )}
+                    >
+                      <option>BIM</option>
+                      <option>ADMIN</option>
+                      <option>LEED</option>
+                      <option>MEP</option>
+                    </select>
+                  );
+                }
+                return (
+                  <input
+                    key={key}
+                    type="text"
+                    name={key}
+                    value={selectedMember[key]}
+                    onChange={(e) =>
+                      setSelectedMember({
+                        ...selectedMember,
+                        [key]: e.target.value,
+                      })
+                    }
+                    placeholder={key}
+                    className="w-full p-2 border rounded"
+                  />
+                );
+              })}
             </div>
 
             <div className="flex justify-end mt-4 gap-3">

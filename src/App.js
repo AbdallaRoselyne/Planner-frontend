@@ -10,7 +10,6 @@ import Sidebar from "./components/Users/Sidebar";
 import AdminSidebar from "./components/Admin/adminSidebar";
 import AboutUs from "./components/AboutUs";
 import Login from "./components/Auth/Login";
-import SignUp from "./components/Auth/SignUp";
 import UserDashboard from "./components/Users/UserDashboard";
 import MembersPage from "./components/Users/members";
 import TasksPage from "./components/Users/tasks";
@@ -65,7 +64,6 @@ function App() {
           }
         />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
 
         {/* User Routes - Uses User Sidebar */}
         <Route

@@ -14,11 +14,6 @@ function Navbar() {
               Login
             </button>
           </Link>
-          <Link to="/signup">
-            <button className="bg-white text-[#3b0764] px-4 py-2 rounded hover:bg-purple-400">
-              Sign Up
-            </button>
-          </Link>
         </div>
       </div>
     </nav>
