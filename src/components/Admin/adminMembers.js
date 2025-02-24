@@ -158,7 +158,7 @@ const AdminMembers = () => {
                 <td className="p-2">{user.billableRate}</td>
                 <td className="p-2 flex gap-2">
                   <button
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    className="text-[#3b0764] hover:text-blue-800 flex items-center gap-1"
                     onClick={() => {
                       setSelectedMember(user);
                       setEditModal(true);

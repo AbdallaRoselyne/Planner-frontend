@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import DateTimePicker from "react-datetime-picker";
 import "react-calendar/dist/Calendar.css";
@@ -6,36 +6,37 @@ import "react-datetime-picker/dist/DateTimePicker.css";
 import { FiCheckCircle, FiEdit } from "react-icons/fi";
 
 const ApproveTaskRequests = () => {
-  const [taskRequests, setTaskRequests] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      task: "Design Wireframes",
-      hoursRequested: "10",
-      code: "P001",
-      project: "Constance",
-      requestor: "Rozzy",
-      department: "UI/UX",
-      notes: "Wireframes for the new project",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      task: "Develop API",
-      hoursRequested: "20",
-      code: "P002",
-      project: "Constance",
-      requestor: "Rozzy",
-      department: "Backend",
-      notes: "API for the new project",
-    }
-  ]);
-
+  const [taskRequests, setTaskRequests] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [approvedHours, setApprovedHours] = useState(2);
   const [approvedSlots, setApprovedSlots] = useState([]);
+
+  useEffect(() => {
+    fetchTaskRequests();
+  }, []);
+
+  const fetchTaskRequests = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/requests");
+      const data = await response.json();
+      const formattedData = data.map((request) => ({
+        id: request._id,
+        name: request.requestedName,
+        task: request.Task,
+        hoursRequested: request.hours,
+        code: request.projectCode,
+        project: request.project,
+        requestor: request.requester,
+        department: request.department,
+        notes: request.Notes,
+      }));
+      setTaskRequests(formattedData);
+    } catch (error) {
+      console.error("Error fetching task requests:", error);
+    }
+  };
 
   // Function to categorize time into slots
   const getTimeSlot = (time) => {
@@ -113,7 +114,7 @@ const ApproveTaskRequests = () => {
                   <td className="border p-2 flex gap-2">
                     <button
                       onClick={() => setSelectedTask(task)}
-                      className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-800"
+                      className="bg-[#3b0764] text-white px-2 py-1 rounded hover:bg-blue-800"
                     >
                       <FiEdit /> Select
                     </button>
@@ -128,7 +129,7 @@ const ApproveTaskRequests = () => {
         {selectedTask && (
           <div className="bg-white p-6 shadow rounded-lg mb-6">
             <h2 className="text-lg font-semibold mb-4">
-              Approving Task: <span className="text-blue-600">{selectedTask.task}</span>
+              Approving Task: <span className="text-[#3b0764]">{selectedTask.task}</span>
             </h2>
             
             <div className="flex flex-col gap-4">
@@ -160,7 +161,7 @@ const ApproveTaskRequests = () => {
               {/* Approve Button */}
               <button
                 onClick={handleApprove}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800"
+                className="bg-[#bef264] text-black px-4 py-2 rounded hover:bg-green-800"
               >
                 <FiCheckCircle /> Approve
               </button>
