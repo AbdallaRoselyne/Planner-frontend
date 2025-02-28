@@ -87,7 +87,10 @@ const BudgetTracking = () => {
     };
     console.log("Sending payload:", payload); // Log the payload
     try {
-      const response = await axios.put(`${API_URL}/${editProject._id}`, payload);
+      const response = await axios.put(
+        `${API_URL}/${editProject._id}`,
+        payload
+      );
       setProjects(
         projects.map((project) =>
           project._id === editProject._id ? response.data : project

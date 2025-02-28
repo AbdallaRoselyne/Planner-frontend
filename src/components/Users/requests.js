@@ -245,17 +245,17 @@ const MembersPage = () => {
                 required
               />
               <select
-                name="projectCode"
-                value={requestData.projectCode}
+                name="project"
+                value={requestData.project}
                 onChange={(e) => {
                   handleChange(e);
                   const selectedProject = projects.find(
-                    (p) => p.code === e.target.value
+                    (p) => p.name === e.target.value
                   );
                   if (selectedProject) {
                     setRequestData((prev) => ({
                       ...prev,
-                      project: selectedProject.name,
+                      projectCode: selectedProject.code,
                       department: selectedProject.department,
                     }));
                   }
@@ -263,24 +263,23 @@ const MembersPage = () => {
                 className="w-full p-2 border rounded"
                 required
               >
-                <option value="">Select Project Code</option>
+                <option value="">Select Project Name</option>
                 {projects.map((project) => (
-                  <option key={project.code} value={project.code}>
-                    {project.code}
+                  <option key={project.name} value={project.name}>
+                    {project.name}
                   </option>
                 ))}
               </select>
               <input
                 type="text"
-                name="project"
-                value={requestData.project}
+                name="projectCode"
+                value={requestData.projectCode}
                 onChange={handleChange}
-                placeholder="Project"
+                placeholder="Project Code"
                 className="w-full p-2 border rounded"
                 required
                 readOnly
               />
-              
               <input
                 type="text"
                 name="department"

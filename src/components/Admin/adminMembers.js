@@ -9,6 +9,7 @@ const AdminMembers = () => {
     name: "",
     email: "",
     jobTitle: "",
+    discipline: "",
     department: "",
     billableRate: "",
   });
@@ -43,7 +44,12 @@ const AdminMembers = () => {
       return;
     }
 
-    if (!newMember.name || !newMember.email || !newMember.jobTitle || !newMember.department) {
+    if (
+      !newMember.name ||
+      !newMember.email ||
+      !newMember.jobTitle ||
+      !newMember.department
+    ) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -67,6 +73,7 @@ const AdminMembers = () => {
           name: "",
           email: "",
           jobTitle: "",
+          discipline: "",
           department: "",
           billableRate: "",
         });
@@ -110,9 +117,12 @@ const AdminMembers = () => {
   const handleRemoveMember = async (id) => {
     if (window.confirm("Are you sure you want to remove this member?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/members/${id}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(
+          `http://localhost:5000/api/members/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (response.ok) {
           setMembers(members.filter((member) => member._id !== id));
@@ -126,7 +136,9 @@ const AdminMembers = () => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center bg-white p-4 shadow rounded-lg mb-6">
-        <h1 className="text-2xl font-bold text-[#3b0764]">Manage Users & Teams</h1>
+        <h1 className="text-2xl font-bold text-[#3b0764]">
+          Manage Users & Teams
+        </h1>
         <button
           className="bg-[#3b0764] text-white px-4 py-2 rounded-lg hover:bg-[#540a84] flex items-center gap-2"
           onClick={() => setShowModal(true)}
@@ -143,6 +155,7 @@ const AdminMembers = () => {
               <th className="text-left p-2">Name</th>
               <th className="text-left p-2">Email</th>
               <th className="text-left p-2">Job Title</th>
+              <th className="text-left p-2">Discipline</th>
               <th className="text-left p-2">Department</th>
               <th className="text-left p-2">Billable Rate</th>
               <th className="text-left p-2">Actions</th>
@@ -154,6 +167,7 @@ const AdminMembers = () => {
                 <td className="p-2">{user.name}</td>
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.jobTitle}</td>
+                <td className="p-2">{user.discipline}</td>
                 <td className="p-2">{user.department}</td>
                 <td className="p-2">{user.billableRate}</td>
                 <td className="p-2 flex gap-2">
@@ -183,7 +197,9 @@ const AdminMembers = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-[#3b0764]">Add New Member</h2>
+              <h2 className="text-xl font-bold text-[#3b0764]">
+                Add New Member
+              </h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-600 hover:text-gray-900"
@@ -217,6 +233,16 @@ const AdminMembers = () => {
                 placeholder="Job Title"
                 className="w-full p-2 border rounded"
               />
+
+              <input
+                type="text"
+                name="discipline"
+                value={newMember.discipline}
+                onChange={handleChange}
+                placeholder="Discipline"
+                className="w-full p-2 border rounded"
+              />
+
               <select
                 name="department"
                 value={newMember.department}
@@ -270,48 +296,88 @@ const AdminMembers = () => {
               </button>
             </div>
 
-            <div className="space-y-3">
-              {Object.keys(selectedMember).map((key) => {
-                if (key === "_id") return null;
-                if (key === "department") {
-                  return (
-                    <select
-                      key={key}
-                      name="department"
-                      value={selectedMember.department}
-                      onChange={(e) =>
-                        setSelectedMember({
-                          ...selectedMember,
-                          department: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded"
-                    >
-                      <option>BIM</option>
-                      <option>ADMIN</option>
-                      <option>LEED</option>
-                      <option>MEP</option>
-                    </select>
-                  );
+            <form onSubmit={handleEditMember} className="space-y-4">
+              <input
+                type="text"
+                name="name"
+                value={selectedMember.name}
+                onChange={(e) =>
+                  setSelectedMember({ ...selectedMember, name: e.target.value })
                 }
-                return (
-                  <input
-                    key={key}
-                    type="text"
-                    name={key}
-                    value={selectedMember[key]}
-                    onChange={(e) =>
-                      setSelectedMember({
-                        ...selectedMember,
-                        [key]: e.target.value,
-                      })
-                    }
-                    placeholder={key}
-                    className="w-full p-2 border rounded"
-                  />
-                );
-              })}
-            </div>
+                placeholder="Full Name"
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="email"
+                name="email"
+                value={selectedMember.email}
+                onChange={(e) =>
+                  setSelectedMember({
+                    ...selectedMember,
+                    email: e.target.value,
+                  })
+                }
+                placeholder="Email"
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="text"
+                name="jobTitle"
+                value={selectedMember.jobTitle}
+                onChange={(e) =>
+                  setSelectedMember({
+                    ...selectedMember,
+                    jobTitle: e.target.value,
+                  })
+                }
+                placeholder="Job Title"
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="text"
+                name="discipline"
+                value={selectedMember.discipline}
+                onChange={(e) =>
+                  setSelectedMember({
+                    ...selectedMember,
+                    discipline: e.target.value,
+                  })
+                }
+                placeholder="Discipline"
+                className="w-full p-2 border rounded"
+              />
+              <input
+                type="number"
+                name="billableRate"
+                value={selectedMember.billableRate}
+                onChange={(e) =>
+                  setSelectedMember({
+                    ...selectedMember,
+                    billableRate: e.target.value,
+                  })
+                }
+                placeholder="Billable Rate"
+                className="w-full p-2 border rounded"
+              />
+
+              <select
+                name="department"
+                value={selectedMember.department}
+                onChange={(e) =>
+                  setSelectedMember({
+                    ...selectedMember,
+                    department: e.target.value,
+                  })
+                }
+                className="w-full p-2 border rounded"
+              >
+                <option>BIM</option>
+                <option>ADMIN</option>
+                <option>LEED</option>
+                <option>MEP</option>
+              </select>
+
+            </form>
 
             <div className="flex justify-end mt-4 gap-3">
               <button
