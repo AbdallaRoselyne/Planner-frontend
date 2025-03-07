@@ -24,8 +24,14 @@ function Login() {
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("email", email);
+      localStorage.setItem("role", response.data.role);
 
-      navigate("/Admin/dashboard");
+      // Redirect based on role
+      if (response.data.role === "admin") {
+        navigate("/Admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       setError(
         error.response?.data?.message || "Login failed. Please try again."

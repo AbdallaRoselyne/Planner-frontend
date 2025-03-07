@@ -46,7 +46,7 @@ const UserDashboard = () => {
           <div className="bg-white p-4 shadow rounded-lg flex items-center">
             <FiClock className="text-yellow-700 text-3xl mr-4" />
             <div>
-              <h2 className="text-lg font-semibold">Time Tracking</h2>
+              <h2 className="text-lg font-semibold">Time Sheet</h2>
               <p className="text-gray-600">Log your work hours efficiently.</p>
             </div>
           </div>

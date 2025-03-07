@@ -12,6 +12,7 @@ const MembersPage = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [requestData, setRequestData] = useState({
     requestedName: "",
+    email: "",
     projectCode: "",
     project: "",
     department: "",
@@ -20,10 +21,15 @@ const MembersPage = () => {
     Task: "",
     Notes: "",
   });
+  const [members, setMembers] = useState([]); 
 
-  // Fetch requests and projects
+  // Fetch requests, projects, and members
   useEffect(() => {
     fetchRequests();
+    fetchMembers(); 
+  }, []);
+
+  useEffect(() => {
     if (showModal) {
       fetchProjects();
     }
@@ -47,8 +53,38 @@ const MembersPage = () => {
     }
   };
 
+  const fetchMembers = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/members");
+      setMembers(response.data); 
+    } catch (error) {
+      console.error("Error fetching members:", error);
+    }
+  };
+
   const handleChange = (e) => {
     setRequestData({ ...requestData, [e.target.name]: e.target.value });
+  };
+
+  const handleNameChange = (e) => {
+    const selectedName = e.target.value;
+    setRequestData({ ...requestData, requestedName: selectedName });
+
+    // Find the selected member and auto-fill the email
+    const selectedMember = members.find(
+      (member) => member.name === selectedName
+    );
+    if (selectedMember) {
+      setRequestData((prevData) => ({
+        ...prevData,
+        email: selectedMember.email,
+      }));
+    } else {
+      setRequestData((prevData) => ({
+        ...prevData,
+        email: "",
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -98,6 +134,7 @@ const MembersPage = () => {
   const resetForm = () => {
     setRequestData({
       requestedName: "",
+      email: "",
       projectCode: "",
       project: "",
       department: "",
@@ -113,9 +150,9 @@ const MembersPage = () => {
 
   const filteredMembers = requestedMembers.filter(
     (member) =>
-      member.requestedName.toLowerCase().includes(filterText.toLowerCase()) ||
-      member.projectCode.toLowerCase().includes(filterText.toLowerCase()) ||
-      member.department.toLowerCase().includes(filterText.toLowerCase())
+      (member.requestedName || "").toLowerCase().includes(filterText.toLowerCase()) ||
+      (member.projectCode || "").toLowerCase().includes(filterText.toLowerCase()) ||
+      (member.department || "").toLowerCase().includes(filterText.toLowerCase())
   );
 
   return (
@@ -151,6 +188,7 @@ const MembersPage = () => {
               <thead>
                 <tr className="bg-gray-200">
                   <th className="p-2">Name</th>
+                  <th className="p-2">Email</th>
                   <th className="p-2">Project Code</th>
                   <th className="p-2">Project</th>
                   <th className="p-2">Department</th>
@@ -165,6 +203,7 @@ const MembersPage = () => {
                 {filteredMembers.map((member) => (
                   <tr key={member._id} className="text-center">
                     <td className="p-2">{member.requestedName}</td>
+                    <td className="p-2">{member.email}</td>
                     <td className="p-2">{member.projectCode}</td>
                     <td className="p-2">{member.project}</td>
                     <td className="p-2">{member.department}</td>
@@ -207,6 +246,7 @@ const MembersPage = () => {
             </div>
             <div className="space-y-4">
               <p><strong>Name:</strong> {selectedTask.requestedName}</p>
+              <p><strong>Email:</strong> {selectedTask.email}</p>
               <p><strong>Project Code:</strong> {selectedTask.projectCode}</p>
               <p><strong>Project:</strong> {selectedTask.project}</p>
               <p><strong>Department:</strong> {selectedTask.department}</p>
@@ -235,15 +275,35 @@ const MembersPage = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                type="text"
+              {/* Name Dropdown */}
+              <select
                 name="requestedName"
                 value={requestData.requestedName}
-                onChange={handleChange}
-                placeholder="Requested Name"
+                onChange={handleNameChange}
                 className="w-full p-2 border rounded"
                 required
+              >
+                <option value="">Select Member</option>
+                {members.map((member) => (
+                  <option key={member._id} value={member.name}>
+                    {member.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Email Field (Auto-filled) */}
+              <input
+                type="email"
+                name="email"
+                value={requestData.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className="w-full p-2 border rounded"
+                required
+                readOnly
               />
+
+              {/* Project Dropdown */}
               <select
                 name="project"
                 value={requestData.project}
@@ -270,6 +330,8 @@ const MembersPage = () => {
                   </option>
                 ))}
               </select>
+
+              {/* Project Code (Auto-filled) */}
               <input
                 type="text"
                 name="projectCode"
@@ -280,6 +342,8 @@ const MembersPage = () => {
                 required
                 readOnly
               />
+
+              {/* Department (Auto-filled) */}
               <input
                 type="text"
                 name="department"
@@ -291,6 +355,7 @@ const MembersPage = () => {
                 readOnly
               />
 
+              {/* Hours */}
               <input
                 type="number"
                 name="hours"
@@ -300,6 +365,8 @@ const MembersPage = () => {
                 className="w-full p-2 border rounded"
                 required
               />
+
+              {/* Requester */}
               <input
                 type="text"
                 name="requester"
@@ -309,6 +376,8 @@ const MembersPage = () => {
                 className="w-full p-2 border rounded"
                 required
               />
+
+              {/* Task */}
               <input
                 type="text"
                 name="Task"
@@ -318,6 +387,8 @@ const MembersPage = () => {
                 className="w-full p-2 border rounded"
                 required
               />
+
+              {/* Notes */}
               <input
                 type="text"
                 name="Notes"
@@ -326,6 +397,8 @@ const MembersPage = () => {
                 placeholder="Notes"
                 className="w-full p-2 border rounded"
               />
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 className="bg-[#3b0764] text-white px-4 py-2 rounded hover:bg-[#4c0a86] w-full"

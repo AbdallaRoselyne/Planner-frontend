@@ -19,7 +19,7 @@ const Sidebar = () => {
             <FiCheckCircle className="text-xl" /> Assigned Tasks
             </a>
             <a href="/time" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
-            <FiClock className="text-xl" /> Time Tracking
+            <FiClock className="text-xl" /> Time Sheet
             </a>
             <a href="calendar" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
             <FiCalendar className="text-xl" /> Calendar Integration
