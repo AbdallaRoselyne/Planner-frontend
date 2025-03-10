@@ -10,7 +10,7 @@ const Sidebar = () => {
         </div>
         <nav className="flex flex-col gap-4">
             <a href="/dashboard" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
-            <FiHome className="text-xl" /> Home
+            <FiCalendar className="text-xl" /> Calendar
             </a>
             <a href="/members" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
             <FiUserPlus className="text-xl" /> Request Member
@@ -21,9 +21,7 @@ const Sidebar = () => {
             <a href="/time" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
             <FiClock className="text-xl" /> Time Sheet
             </a>
-            <a href="calendar" className="flex items-center gap-2 p-2 hover:bg-[#4c0a86] rounded">
-            <FiCalendar className="text-xl" /> Calendar Integration
-            </a>
+            
         </nav>
         <div className="mt-auto">
             <button className="flex items-center gap-2 p-2 bg-[#bef264] hover:bg-[#bef264] rounded w-full text-black">

@@ -14,7 +14,6 @@ import UserDashboard from "./components/Users/UserDashboard";
 import MembersPage from "./components/Users/requests";
 import TasksPage from "./components/Users/tasks";
 import TimeTrackingPage from "./components/Users/time";
-import CalendarPage from "./components/Users/calendar";
 import AdminMembers from "./components/Admin/adminMembers";
 import AdminCalendar from "./components/Admin/adminCalendar";
 import ApproveTaskRequests from "./components/Admin/adminTasks";
@@ -98,14 +97,7 @@ function App() {
             </UserLayout>
           }
         />
-        <Route
-          path="/calendar"
-          element={
-            <UserLayout>
-              <CalendarPage />
-            </UserLayout>
-          }
-        />
+        
 
         {/* Admin Routes - Uses Admin Sidebar */}
         <Route

@@ -31,50 +31,99 @@ const CalendarPage = () => {
     }
   };
 
-  // Format approved tasks for FullCalendar
-  const calendarEvents = approvedTasks
-    .filter((task) => {
-      // Ensure task.date is valid
-      if (!task.date || isNaN(new Date(task.date).getTime())) {
-        console.error("Invalid date for task:", task);
-        return false; // Skip this task
+  // Function to get color class based on department
+  const getDepartmentColorClass = (department) => {
+    switch (department) {
+      case "LEED":
+        return "event-color-leed"; 
+      case "BIM":
+        return "event-color-bim"; 
+      case "MEP":
+        return "event-color-mep"; 
+      default:
+        return "event-color-default"; // Gray for tasks without a department
+    }
+  };
+
+  // Function to schedule tasks sequentially for each user on the same day
+  const scheduleTasksSequentially = (tasks) => {
+    const userTaskMap = {};
+
+    tasks.forEach((task) => {
+      const taskDate = new Date(task.date).toISOString().split("T")[0];
+      const userKey = `${task.requestedName}-${taskDate}`;
+
+      if (!userTaskMap[userKey]) {
+        userTaskMap[userKey] = {
+          currentStartTime: new Date(task.date),
+          tasks: [],
+        };
+        // Set the default start time to 8:30 AM
+        userTaskMap[userKey].currentStartTime.setHours(8, 30, 0, 0);
       }
 
-      const taskDate = new Date(task.date).toISOString().split("T")[0];
-      const filterDate = filters.date ? new Date(filters.date).toISOString().split("T")[0] : "";
-
-      return (
-        (!filters.requestedName || task.requestedName?.includes(filters.requestedName)) &&
-        (!filters.project || task.project?.includes(filters.project)) &&
-        (!filters.date || taskDate === filterDate)
-      );
-    })
-    .map((task) => {
-      const taskDate = new Date(task.date);
-
-      // Ensure task.hours is valid
-      const taskHours = Number(task.hours) || 1; // Default to 1 hour if missing
-
-      // Set start time (default to 8:30 AM if no start time is provided)
-      const startTime = new Date(taskDate);
-      startTime.setHours(8, 30, 0, 0); // Default start time
-
-      // Set end time based on task hours
+      const startTime = new Date(userTaskMap[userKey].currentStartTime);
       const endTime = new Date(startTime);
-      endTime.setHours(startTime.getHours() + taskHours);
+      endTime.setHours(startTime.getHours() + task.hours);
 
-      return {
-        id: task._id,
-        title: task.Task,
+      // Ensure the task does not exceed the 8-hour workday
+      if (endTime.getHours() > 16 || (endTime.getHours() === 16 && endTime.getMinutes() > 45)) {
+        toast.warning(`Task "${task.Task}" exceeds the 8-hour workday for ${task.requestedName} on ${taskDate}`);
+        return; // Skip this task
+      }
+
+      // Add the task to the user's task list
+      userTaskMap[userKey].tasks.push({
+        ...task,
         start: startTime.toISOString(),
         end: endTime.toISOString(),
-        extendedProps: {
-          project: task.project,
-          requestedName: task.requestedName,
-          hours: taskHours,
-        },
-      };
-    })
+      });
+
+      // Update the current start time for the next task
+      userTaskMap[userKey].currentStartTime = endTime;
+    });
+
+    // Flatten the userTaskMap into a single array of events
+    return Object.values(userTaskMap).flatMap((userTasks) => userTasks.tasks);
+  };
+
+  // Format approved tasks for FullCalendar
+  const calendarEvents = scheduleTasksSequentially(
+    approvedTasks
+      .filter((task) => {
+        // Ensure task.date is valid
+        if (!task.date || isNaN(new Date(task.date).getTime())) {
+          console.error("Invalid date for task:", task);
+          return false; // Skip this task
+        }
+
+        const taskDate = new Date(task.date).toISOString().split("T")[0];
+        const filterDate = filters.date ? new Date(filters.date).toISOString().split("T")[0] : "";
+
+        return (
+          (!filters.requestedName || task.requestedName?.includes(filters.requestedName)) &&
+          (!filters.project || task.project?.includes(filters.project)) &&
+          (!filters.date || taskDate === filterDate)
+        );
+      })
+      .map((task) => ({
+        ...task,
+        hours: Number(task.hours) || 1, 
+      }))
+  )
+    .map((task) => ({
+      id: task._id,
+      title: task.Task,
+      start: task.start,
+      end: task.end,
+      className: getDepartmentColorClass(task.department), // Add class based on department
+      extendedProps: {
+        project: task.project,
+        requestedName: task.requestedName,
+        hours: task.hours,
+        department: task.department, // Include department in extendedProps
+      },
+    }))
     .filter(Boolean); // Remove null values
 
   // Handle task click to show details
@@ -186,6 +235,7 @@ const CalendarPage = () => {
             <p><strong>Task:</strong> {selectedTask.title}</p>
             <p><strong>Assignee:</strong> {selectedTask.requestedName}</p>
             <p><strong>Project:</strong> {selectedTask.project}</p>
+            <p><strong>Department:</strong> {selectedTask.department}</p>
             <p><strong>Hours:</strong> {selectedTask.hours}</p>
             <p><strong>Start:</strong> {selectedTask.start.toLocaleString()}</p>
             <p><strong>End:</strong> {selectedTask.end.toLocaleString()}</p>
@@ -198,6 +248,28 @@ const CalendarPage = () => {
           </div>
         </div>
       )}
+
+      {/* Add custom CSS for event colors */}
+      <style>
+        {`
+          .event-color-leed {
+            background-color: #c4b5fd !important;
+            border-color: #c4b5fd !important;
+          }
+          .event-color-bim {
+            background-color: #bef264 !important;
+            border-color: #bef264 !important;
+          }
+          .event-color-mep {
+            background-color: #a5b4fc !important;
+            border-color: #a5b4fc !important;
+          }
+          .event-color-default {
+            background-color: #6b7280 !important;
+            border-color: #6b7280 !important;
+          }
+        `}
+      </style>
     </div>
   );
 };

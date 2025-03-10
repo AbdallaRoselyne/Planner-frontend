@@ -452,6 +452,7 @@ const ApproveTaskRequests = () => {
   </div>
 )}
 
+
         {/* Approved/Rejected Tasks */}
         {(approvedTasks.length > 0 || rejectedTasks.length > 0) && (
           <div className="bg-white p-6 shadow rounded-lg mb-6">
@@ -467,7 +468,6 @@ const ApproveTaskRequests = () => {
                     <th className="border p-2">Task</th>
                     <th className="border p-2">Project</th>
                     <th className="border p-2">Hours</th>
-                    <th className="border p-2">Time Slot</th>
                     <th className="border p-2">Date</th>
                     <th className="border p-2">Status</th>
                   </tr>
@@ -480,7 +480,6 @@ const ApproveTaskRequests = () => {
                       <td className="border p-2">{task.Task}</td>
                       <td className="border p-2">{task.project}</td>
                       <td className="border p-2">{task.approvedHours}</td>
-                      <td className="border p-2">{task.timeSlot}</td>
                       <td className="border p-2">
                         {new Date(task.date).toLocaleDateString()}
                       </td>
