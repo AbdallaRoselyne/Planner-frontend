@@ -15,8 +15,8 @@ import MembersPage from "./components/Users/requests";
 import TasksPage from "./components/Users/tasks";
 import TimeTrackingPage from "./components/Users/time";
 import CalendarPage from "./components/Users/calendar";
-import AdminDashboard from "./components/Admin/adminDashboard";
 import AdminMembers from "./components/Admin/adminMembers";
+import AdminCalendar from "./components/Admin/adminCalendar";
 import ApproveTaskRequests from "./components/Admin/adminTasks";
 import BudgetTimeTracking from "./components/Admin/adminBudget";
 import ReportsAnalytics from "./components/Admin/adminReports";
@@ -112,7 +112,7 @@ function App() {
           path="/admin/dashboard"
           element={
             <AdminLayout>
-              <AdminDashboard />
+              <AdminCalendar />
             </AdminLayout>
           }
         />

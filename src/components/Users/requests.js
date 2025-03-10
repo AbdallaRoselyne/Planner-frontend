@@ -21,12 +21,12 @@ const MembersPage = () => {
     Task: "",
     Notes: "",
   });
-  const [members, setMembers] = useState([]); 
+  const [members, setMembers] = useState([]);
 
   // Fetch requests, projects, and members
   useEffect(() => {
     fetchRequests();
-    fetchMembers(); 
+    fetchMembers();
   }, []);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const MembersPage = () => {
   const fetchMembers = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/members");
-      setMembers(response.data); 
+      setMembers(response.data);
     } catch (error) {
       console.error("Error fetching members:", error);
     }
@@ -64,27 +64,6 @@ const MembersPage = () => {
 
   const handleChange = (e) => {
     setRequestData({ ...requestData, [e.target.name]: e.target.value });
-  };
-
-  const handleNameChange = (e) => {
-    const selectedName = e.target.value;
-    setRequestData({ ...requestData, requestedName: selectedName });
-
-    // Find the selected member and auto-fill the email
-    const selectedMember = members.find(
-      (member) => member.name === selectedName
-    );
-    if (selectedMember) {
-      setRequestData((prevData) => ({
-        ...prevData,
-        email: selectedMember.email,
-      }));
-    } else {
-      setRequestData((prevData) => ({
-        ...prevData,
-        email: "",
-      }));
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -150,8 +129,12 @@ const MembersPage = () => {
 
   const filteredMembers = requestedMembers.filter(
     (member) =>
-      (member.requestedName || "").toLowerCase().includes(filterText.toLowerCase()) ||
-      (member.projectCode || "").toLowerCase().includes(filterText.toLowerCase()) ||
+      (member.requestedName || "")
+        .toLowerCase()
+        .includes(filterText.toLowerCase()) ||
+      (member.projectCode || "")
+        .toLowerCase()
+        .includes(filterText.toLowerCase()) ||
       (member.department || "").toLowerCase().includes(filterText.toLowerCase())
   );
 
@@ -245,15 +228,33 @@ const MembersPage = () => {
               </button>
             </div>
             <div className="space-y-4">
-              <p><strong>Name:</strong> {selectedTask.requestedName}</p>
-              <p><strong>Email:</strong> {selectedTask.email}</p>
-              <p><strong>Project Code:</strong> {selectedTask.projectCode}</p>
-              <p><strong>Project:</strong> {selectedTask.project}</p>
-              <p><strong>Department:</strong> {selectedTask.department}</p>
-              <p><strong>Hours:</strong> {selectedTask.hours}</p>
-              <p><strong>Requester:</strong> {selectedTask.requester}</p>
-              <p><strong>Task:</strong> {selectedTask.Task}</p>
-              <p><strong>Notes:</strong> {selectedTask.Notes}</p>
+              <p>
+                <strong>Name:</strong> {selectedTask.requestedName}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedTask.email}
+              </p>
+              <p>
+                <strong>Project Code:</strong> {selectedTask.projectCode}
+              </p>
+              <p>
+                <strong>Project:</strong> {selectedTask.project}
+              </p>
+              <p>
+                <strong>Department:</strong> {selectedTask.department}
+              </p>
+              <p>
+                <strong>Hours:</strong> {selectedTask.hours}
+              </p>
+              <p>
+                <strong>Requester:</strong> {selectedTask.requester}
+              </p>
+              <p>
+                <strong>Task:</strong> {selectedTask.Task}
+              </p>
+              <p>
+                <strong>Notes:</strong> {selectedTask.Notes}
+              </p>
             </div>
           </div>
         </div>
@@ -279,7 +280,18 @@ const MembersPage = () => {
               <select
                 name="requestedName"
                 value={requestData.requestedName}
-                onChange={handleNameChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  const selectedMember = members.find(
+                    (m) => m.name === e.target.value
+                  );
+                  if (selectedMember) {
+                    setRequestData((prev) => ({
+                      ...prev,
+                      email: selectedMember.email,
+                    }));
+                  }
+                }}
                 className="w-full p-2 border rounded"
                 required
               >

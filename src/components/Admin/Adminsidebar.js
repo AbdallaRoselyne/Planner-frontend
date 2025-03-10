@@ -1,16 +1,16 @@
 import React from "react";
-import { FiUsers, FiClipboard, FiDollarSign, FiBarChart2, FiLogOut, FiHome } from "react-icons/fi";
+import { FiUsers, FiClipboard, FiDollarSign, FiBarChart2, FiLogOut, FiHome, FiCalendar } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const AdminSidebar = () => {
   return (
-    <div className="w-64 bg-[#3b0764] text-white flex flex-col p-6">
-    <div className="text-large font-bold mb-8">
+    <div className="w-64 h-screen bg-[#3b0764] text-white flex flex-col p-6 overflow-hidden">
+      <div className="text-large font-bold mb-8">
         Pro<span className="text-[#bef264]">Design</span>
-    </div>
+      </div>
       <nav className="flex flex-col gap-4">
         <Link to="/admin/dashboard" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
-          <FiHome className="text-xl" /> Dashboard
+          <FiCalendar className="text-xl" /> Calendar
         </Link>
         <Link to="/admin/users" className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded">
           <FiUsers className="text-xl" /> Manage Users & Teams

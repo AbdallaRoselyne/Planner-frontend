@@ -54,7 +54,7 @@ const ApproveTaskRequests = () => {
 
   const handleApprove = async () => {
     if (!selectedTask) return toast.error("Select a task first!");
-
+  
     try {
       const response = await fetch(
         `http://localhost:5000/api/requests/${selectedTask._id}/approve`,
@@ -67,26 +67,31 @@ const ApproveTaskRequests = () => {
           }),
         }
       );
-
+  
       if (!response.ok) throw new Error("Failed to approve task");
-
+  
       const approvedTask = await response.json();
       setApprovedTasks([...approvedTasks, approvedTask.task]);
-      setTaskRequests(taskRequests.filter((task) => task._id !== selectedTask._id));
+      setTaskRequests(
+        taskRequests.filter((task) => task._id !== selectedTask._id)
+      );
       setSelectedTask(null);
       setApprovedHours(8);
       setSelectedDateTime(new Date());
       toast.success("Task approved!");
+  
+      // Notify the user
+      toast.info(`Task "${selectedTask.Task}" has been approved.`);
     } catch (error) {
       console.error("Error approving task:", error);
       toast.error("Failed to approve task");
     }
   };
-
+  
   const handleReject = async () => {
     if (!selectedTask) return toast.error("Select a task first!");
     if (!comment) return toast.error("Please provide a reason for rejection.");
-
+  
     try {
       const response = await fetch(
         `http://localhost:5000/api/requests/${selectedTask._id}/reject`,
@@ -96,18 +101,107 @@ const ApproveTaskRequests = () => {
           body: JSON.stringify({ comment }),
         }
       );
-
+  
       if (!response.ok) throw new Error("Failed to reject task");
-
+  
       const rejectedTask = await response.json();
       setRejectedTasks([...rejectedTasks, rejectedTask.task]);
-      setTaskRequests(taskRequests.filter((task) => task._id !== selectedTask._id));
+      setTaskRequests(
+        taskRequests.filter((task) => task._id !== selectedTask._id)
+      );
       setSelectedTask(null);
       setComment("");
       toast.warning("Task rejected!");
+  
+      // Notify the user
+      toast.info(`Task "${selectedTask.Task}" has been rejected. Reason: ${comment}`);
     } catch (error) {
       console.error("Error rejecting task:", error);
       toast.error("Failed to reject task");
+    }
+  };
+  const handleEditTask = (task) => {
+    setSelectedTask(task);
+    setSelectedDateTime(new Date(task.date)); // Set the date and time for editing
+    setApprovedHours(task.approvedHours || task.hours); // Set the hours for editing
+  };
+  
+ const handleUpdateTask = async () => {
+  if (!selectedTask) return toast.error("Select a task first!");
+
+  try {
+    // Prepare the payload
+    const payload = {
+      ...selectedTask,
+      approvedHours,
+      timeSlot: getTimeSlot(selectedDateTime),
+      date: selectedDateTime,
+      status: selectedTask.status, // Ensure the status is included
+      comment: selectedTask.status === "Rejected" ? comment : "", // Include comment if rejecting
+    };
+
+    const response = await fetch(
+      `http://localhost:5000/api/tasks/${selectedTask._id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to update task");
+
+    const updatedTask = await response.json();
+
+    // Update the state based on the task status
+    if (updatedTask.status === "Approved") {
+      setApprovedTasks((prev) =>
+        prev.map((task) =>
+          task._id === updatedTask._id ? updatedTask : task
+        )
+      );
+      setRejectedTasks((prev) =>
+        prev.filter((task) => task._id !== updatedTask._id)
+      );
+    } else if (updatedTask.status === "Rejected") {
+      setRejectedTasks((prev) =>
+        prev.map((task) =>
+          task._id === updatedTask._id ? updatedTask : task
+        )
+      );
+      setApprovedTasks((prev) =>
+        prev.filter((task) => task._id !== updatedTask._id)
+      );
+    }
+
+    setSelectedTask(null); // Clear the selected task
+    toast.success("Task updated successfully!");
+  } catch (error) {
+    console.error("Error updating task:", error);
+    toast.error("Failed to update task");
+  }
+};
+
+  const handleDeleteTask = async (taskId, status) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/tasks/${taskId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete task");
+
+      if (status === "Approved") {
+        setApprovedTasks(approvedTasks.filter((task) => task._id !== taskId));
+      } else {
+        setRejectedTasks(rejectedTasks.filter((task) => task._id !== taskId));
+      }
+      toast.success("Task deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
     }
   };
 
@@ -120,23 +214,30 @@ const ApproveTaskRequests = () => {
   };
 
   const filteredTasks = taskRequests.filter((task) => {
-    const taskDate = task.date ? new Date(task.date).toISOString().split("T")[0] : null;
-    const filterDate = filters.date ? new Date(filters.date).toISOString().split("T")[0] : null;
+    const taskDate = task.date
+      ? new Date(task.date).toISOString().split("T")[0]
+      : null;
+    const filterDate = filters.date
+      ? new Date(filters.date).toISOString().split("T")[0]
+      : null;
 
     return (
-      (!filters.requestedName || task.requestedName.includes(filters.requestedName)) &&
+      (!filters.requestedName ||
+        task.requestedName.includes(filters.requestedName)) &&
       (!filters.project || task.project.includes(filters.project)) &&
       (!filters.date || taskDate === filterDate)
     );
   });
 
   return (
-    <div className="flex h-screen p-6 bg-gray-100">
+    <div className="flex h-screen p-6 bg-gray-100 overflow-y-auto">
       <ToastContainer />
       <div className="flex-1">
         {/* Header */}
         <div className="bg-white p-4 shadow rounded-lg mb-6">
-          <h1 className="text-2xl font-bold text-[#3b0764]">Approve Task Requests</h1>
+          <h1 className="text-2xl font-bold text-[#3b0764]">
+            Approve Task Requests
+          </h1>
         </div>
 
         {/* Filters */}
@@ -147,14 +248,18 @@ const ApproveTaskRequests = () => {
               type="text"
               placeholder="Filter by Assignee"
               value={filters.requestedName}
-              onChange={(e) => setFilters({ ...filters, requestedName: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, requestedName: e.target.value })
+              }
               className="border p-2 rounded"
             />
             <input
               type="text"
               placeholder="Filter by Project"
               value={filters.project}
-              onChange={(e) => setFilters({ ...filters, project: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, project: e.target.value })
+              }
               className="border p-2 rounded"
             />
             <input
@@ -164,7 +269,9 @@ const ApproveTaskRequests = () => {
               className="border p-2 rounded"
             />
             <button
-              onClick={() => setFilters({ requestedName: "", project: "", date: "" })}
+              onClick={() =>
+                setFilters({ requestedName: "", project: "", date: "" })
+              }
               className="bg-[#3b0764] text-white px-4 py-2 rounded hover:bg-[#4c0a86]"
             >
               <FiFilter /> Clear Filters
@@ -228,146 +335,211 @@ const ApproveTaskRequests = () => {
 
         {/* Task Details Panel */}
         {selectedTask && (
-          <div className="bg-white p-6 shadow rounded-lg mb-6">
-            <h2 className="text-lg font-semibold mb-4">
-              Task Details: <span className="text-[#3b0764]">{selectedTask.Task}</span>
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="font-semibold">Name:</label>
-                <p>{selectedTask.requestedName}</p>
-              </div>
-              <div>
-              <label className="font-semibold">Email:</label>
-              <p>{selectedTask.email}</p>
-              </div>
-              <div>
-                <label className="font-semibold">Project:</label>
-                <p>{selectedTask.project}</p>
-              </div>
-              <div>
-                <label className="font-semibold">Hours Requested:</label>
-                <p>{selectedTask.hours}</p>
-              </div>
-              <div>
-                <label className="font-semibold">Department:</label>
-                <p>{selectedTask.department}</p>
-              </div>
-              <div>
-                <label className="font-semibold">Requester:</label>
-                <p>{selectedTask.requester}</p>
-              </div>
-              <div>
-                <label className="font-semibold">Notes:</label>
-                <p>{selectedTask.Notes}</p>
-              </div>
-            </div>
+  <div className="bg-white p-6 shadow rounded-lg mb-6">
+    <h2 className="text-lg font-semibold mb-4">
+      Task Details:{" "}
+      <span className="text-[#3b0764]">{selectedTask.Task}</span>
+    </h2>
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="font-semibold">Name:</label>
+        <p>{selectedTask.requestedName}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Email:</label>
+        <p>{selectedTask.email}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Project:</label>
+        <p>{selectedTask.project}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Hours Requested:</label>
+        <p>{selectedTask.hours}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Department:</label>
+        <p>{selectedTask.department}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Requester:</label>
+        <p>{selectedTask.requester}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Notes:</label>
+        <p>{selectedTask.Notes}</p>
+      </div>
+      <div>
+        <label className="font-semibold">Status:</label>
+        <p>{selectedTask.status}</p>
+      </div>
+    </div>
+    
+    
 
-            {/* Approval Panel */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Approve/Reject Task</h3>
-              <div className="flex flex-col gap-4">
-                {/* Time Picker */}
-                <div>
-                  <label className="font-semibold">Select Date and Time:</label>
-                  <DateTimePicker
-                    onChange={setSelectedDateTime}
-                    value={selectedDateTime}
-                  />
-                </div>
+    {/* Approval Panel */}
+    <div className="mt-6 ">
+      <h3 className="text-lg font-semibold mb-4">
+        Approve/Reject Task
+      </h3>
+      <div className="flex flex-col gap-4 min-h-[200px]">
+        {/* Time Picker */}
+        <div>
+          <label className="font-semibold">Select Date and Time:</label>
+          <DateTimePicker
+            onChange={setSelectedDateTime}
+            value={selectedDateTime}
+          />
+        </div>
 
-                {/* Hours Input */}
-                <div>
-                  <label className="font-semibold">Approved Hours:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max={selectedTask?.hours || 8}
-                    value={approvedHours}
-                    onChange={(e) => setApprovedHours(Number(e.target.value))}
-                    className="border p-2 rounded w-20"
-                  />
-                </div>
+        {/* Hours Input */}
+        <div>
+          <label className="font-semibold">Approved Hours:</label>
+          <input
+            type="number"
+            min="1"
+            max={selectedTask?.hours || 8}
+            value={approvedHours}
+            onChange={(e) => setApprovedHours(Number(e.target.value))}
+            className="border p-2 rounded w-20"
+          />
+        </div>
 
-                {/* Comment Box */}
-                <div>
-                  <label className="font-semibold">Comment (for rejection):</label>
-                  <textarea
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="border p-2 rounded w-full"
-                    rows="3"
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleApprove}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                  >
-                    <FiCheckCircle /> Approve
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    <FiXCircle /> Reject
-                  </button>
-                </div>
-              </div>
-            </div>
+ {/* Comment Box (shown only if status is Rejected or being rejected) */}
+ {(selectedTask.status === "Rejected" || selectedTask.status === "Pending") && (
+          <div>
+            <label className="font-semibold">
+              Comment (for rejection):
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="border p-2 rounded w-full"
+              rows="3"
+              required
+            />
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          {selectedTask.status === "Pending" ? (
+            <>
+              <button
+                onClick={handleApprove}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                <FiCheckCircle /> Approve
+              </button>
+              <button
+                onClick={handleReject}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                <FiXCircle /> Reject
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleUpdateTask}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              <FiEdit /> Update
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Approved/Rejected Tasks */}
         {(approvedTasks.length > 0 || rejectedTasks.length > 0) && (
           <div className="bg-white p-6 shadow rounded-lg mb-6">
-            <h2 className="text-lg font-semibold mb-4">Approved/Rejected Tasks</h2>
-            <table className="w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Email</th>
-                  <th className="border p-2">Task</th>
-                  <th className="border p-2">Project</th>
-                  <th className="border p-2">Hours</th>
-                  <th className="border p-2">Time Slot</th>
-                  <th className="border p-2">Date</th>
-                  <th className="border p-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {approvedTasks.map((task, index) => (
-                  <tr key={index} className="border">
-                    <td className="border p-2">{task.requestedName}</td>
-                    <td className="border p-2">{task.email}</td>
-                    <td className="border p-2">{task.Task}</td>
-                    <td className="border p-2">{task.project}</td>
-                    <td className="border p-2">{task.approvedHours}</td>
-                    <td className="border p-2">{task.timeSlot}</td>
-                    <td className="border p-2">{new Date(task.date).toLocaleDateString()}</td>
-                    <td className="border p-2">
-                      <span className="px-2 py-1 rounded bg-green-200">Approved</span>
-                    </td>
+            <h2 className="text-lg font-semibold mb-4">
+              Approved/Rejected Tasks
+            </h2>
+            <div className="max-h-80 overflow-y-auto">
+              <table className="w-full border-collapse border border-gray-200">
+                <thead className="bg-gray-200 sticky top-0">
+                  <tr>
+                    <th className="border p-2">Name</th>
+                    <th className="border p-2">Email</th>
+                    <th className="border p-2">Task</th>
+                    <th className="border p-2">Project</th>
+                    <th className="border p-2">Hours</th>
+                    <th className="border p-2">Time Slot</th>
+                    <th className="border p-2">Date</th>
+                    <th className="border p-2">Status</th>
                   </tr>
-                ))}
-                {rejectedTasks.map((task, index) => (
-                  <tr key={index} className="border">
-                    <td className="border p-2">{task.requestedName}</td>
-                    <td className="border p-2">{task.email}</td>
-                    <td className="border p-2">{task.Task}</td>
-                    <td className="border p-2">{task.project}</td>
-                    <td className="border p-2">{task.hours}</td>
-                    <td className="border p-2">-</td>
-                    <td className="border p-2">{new Date(task.date).toLocaleDateString()}</td>
-                    <td className="border p-2">
-                      <span className="px-2 py-1 rounded bg-red-200">Rejected</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {approvedTasks.map((task, index) => (
+                    <tr key={index} className="border">
+                      <td className="border p-2">{task.requestedName}</td>
+                      <td className="border p-2">{task.email}</td>
+                      <td className="border p-2">{task.Task}</td>
+                      <td className="border p-2">{task.project}</td>
+                      <td className="border p-2">{task.approvedHours}</td>
+                      <td className="border p-2">{task.timeSlot}</td>
+                      <td className="border p-2">
+                        {new Date(task.date).toLocaleDateString()}
+                      </td>
+                      <td className="border p-2">
+                        <span className="px-2 py-1 rounded bg-green-200">
+                          Approved
+                        </span>
+                      </td>
+                      <td className="border p-2 flex gap-2">
+                        <button
+                          onClick={() => setSelectedTask(task)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                        >
+                          <FiEdit /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task._id, "Approved")}
+                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                        >
+                          <FiXCircle /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {rejectedTasks.map((task, index) => (
+                    <tr key={index} className="border">
+                      <td className="border p-2">{task.requestedName}</td>
+                      <td className="border p-2">{task.email}</td>
+                      <td className="border p-2">{task.Task}</td>
+                      <td className="border p-2">{task.project}</td>
+                      <td className="border p-2">{task.hours}</td>
+                      <td className="border p-2">-</td>
+                      <td className="border p-2">
+                        {new Date(task.date).toLocaleDateString()}
+                      </td>
+                      <td className="border p-2">
+                        <span className="px-2 py-1 rounded bg-red-200">
+                          Rejected
+                        </span>
+                      </td>
+                      <td className="border p-2 flex gap-2">
+                        <button
+                          onClick={() => setSelectedTask(task)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                        >
+                          <FiEdit /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task._id, "Rejected")}
+                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                        >
+                          <FiXCircle /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
