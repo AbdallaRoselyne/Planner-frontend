@@ -54,7 +54,7 @@ const ApproveTaskRequests = () => {
 
   const handleApprove = async () => {
     if (!selectedTask) return toast.error("Select a task first!");
-  
+
     try {
       const response = await fetch(
         `http://localhost:5000/api/requests/${selectedTask._id}/approve`,
@@ -67,9 +67,9 @@ const ApproveTaskRequests = () => {
           }),
         }
       );
-  
+
       if (!response.ok) throw new Error("Failed to approve task");
-  
+
       const approvedTask = await response.json();
       setApprovedTasks([...approvedTasks, approvedTask.task]);
       setTaskRequests(
@@ -79,7 +79,7 @@ const ApproveTaskRequests = () => {
       setApprovedHours(8);
       setSelectedDateTime(new Date());
       toast.success("Task approved!");
-  
+
       // Notify the user
       toast.info(`Task "${selectedTask.Task}" has been approved.`);
     } catch (error) {
@@ -87,11 +87,11 @@ const ApproveTaskRequests = () => {
       toast.error("Failed to approve task");
     }
   };
-  
+
   const handleReject = async () => {
     if (!selectedTask) return toast.error("Select a task first!");
     if (!comment) return toast.error("Please provide a reason for rejection.");
-  
+
     try {
       const response = await fetch(
         `http://localhost:5000/api/requests/${selectedTask._id}/reject`,
@@ -101,9 +101,9 @@ const ApproveTaskRequests = () => {
           body: JSON.stringify({ comment }),
         }
       );
-  
+
       if (!response.ok) throw new Error("Failed to reject task");
-  
+
       const rejectedTask = await response.json();
       setRejectedTasks([...rejectedTasks, rejectedTask.task]);
       setTaskRequests(
@@ -112,75 +112,75 @@ const ApproveTaskRequests = () => {
       setSelectedTask(null);
       setComment("");
       toast.warning("Task rejected!");
-  
+
       // Notify the user
-      toast.info(`Task "${selectedTask.Task}" has been rejected. Reason: ${comment}`);
+      toast.info(
+        `Task "${selectedTask.Task}" has been rejected. Reason: ${comment}`
+      );
     } catch (error) {
       console.error("Error rejecting task:", error);
       toast.error("Failed to reject task");
     }
   };
-  const handleEditTask = (task) => {
-    setSelectedTask(task);
-    setSelectedDateTime(new Date(task.date)); // Set the date and time for editing
-    setApprovedHours(task.approvedHours || task.hours); // Set the hours for editing
-  };
   
- const handleUpdateTask = async () => {
-  if (!selectedTask) return toast.error("Select a task first!");
 
-  try {
-    // Prepare the payload
-    const payload = {
-      ...selectedTask,
-      approvedHours,
-      timeSlot: getTimeSlot(selectedDateTime),
-      date: selectedDateTime,
-      status: selectedTask.status, // Ensure the status is included
-      comment: selectedTask.status === "Rejected" ? comment : "", // Include comment if rejecting
-    };
+  const handleUpdateTask = async () => {
+    if (!selectedTask) return toast.error("Select a task first!");
 
-    const response = await fetch(
-      `http://localhost:5000/api/tasks/${selectedTask._id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    try {
+      // Prepare the payload
+      const payload = {
+        ...selectedTask,
+        approvedHours,
+        timeSlot: getTimeSlot(selectedDateTime),
+        date: selectedDateTime,
+        status: selectedTask.status, // Ensure the status is included
+        comment: selectedTask.status === "Rejected" ? comment : "", // Include comment if rejecting
+      };
+
+      const response = await fetch(
+        `http://localhost:5000/api/tasks/${selectedTask._id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update task");
+
+      const updatedTask = await response.json();
+
+      // Update the state based on the task status
+      if (updatedTask.status === "Approved") {
+        setApprovedTasks((prev) =>
+          prev.map((task) =>
+            task._id === updatedTask._id ? updatedTask : task
+          )
+        );
+        setRejectedTasks((prev) =>
+          prev.filter((task) => task._id !== updatedTask._id)
+        );
+      } else if (updatedTask.status === "Rejected") {
+        setRejectedTasks((prev) =>
+          prev.map((task) =>
+            task._id === updatedTask._id ? updatedTask : task
+          )
+        );
+        setApprovedTasks((prev) =>
+          prev.filter((task) => task._id !== updatedTask._id)
+        );
       }
-    );
 
-    if (!response.ok) throw new Error("Failed to update task");
-
-    const updatedTask = await response.json();
-
-    // Update the state based on the task status
-    if (updatedTask.status === "Approved") {
-      setApprovedTasks((prev) =>
-        prev.map((task) =>
-          task._id === updatedTask._id ? updatedTask : task
-        )
-      );
-      setRejectedTasks((prev) =>
-        prev.filter((task) => task._id !== updatedTask._id)
-      );
-    } else if (updatedTask.status === "Rejected") {
-      setRejectedTasks((prev) =>
-        prev.map((task) =>
-          task._id === updatedTask._id ? updatedTask : task
-        )
-      );
-      setApprovedTasks((prev) =>
-        prev.filter((task) => task._id !== updatedTask._id)
-      );
+      setSelectedTask(null); // Clear the selected task
+      toast.success("Task updated successfully!");
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
     }
+  };
 
-    setSelectedTask(null); // Clear the selected task
-    toast.success("Task updated successfully!");
-  } catch (error) {
-    console.error("Error updating task:", error);
-    toast.error("Failed to update task");
-  }
-};
+  
 
   const handleDeleteTask = async (taskId, status) => {
     try {
@@ -335,123 +335,121 @@ const ApproveTaskRequests = () => {
 
         {/* Task Details Panel */}
         {selectedTask && (
-  <div className="bg-white p-6 shadow rounded-lg mb-6">
-    <h2 className="text-lg font-semibold mb-4">
-      Task Details:{" "}
-      <span className="text-[#3b0764]">{selectedTask.Task}</span>
-    </h2>
-    <div className="grid grid-cols-2 gap-4">
-      <div>
-        <label className="font-semibold">Name:</label>
-        <p>{selectedTask.requestedName}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Email:</label>
-        <p>{selectedTask.email}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Project:</label>
-        <p>{selectedTask.project}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Hours Requested:</label>
-        <p>{selectedTask.hours}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Department:</label>
-        <p>{selectedTask.department}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Requester:</label>
-        <p>{selectedTask.requester}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Notes:</label>
-        <p>{selectedTask.Notes}</p>
-      </div>
-      <div>
-        <label className="font-semibold">Status:</label>
-        <p>{selectedTask.status}</p>
-      </div>
-    </div>
-    
-    
+          <div className="bg-white p-6 shadow rounded-lg mb-6">
+            <h2 className="text-lg font-semibold mb-4">
+              Task Details:{" "}
+              <span className="text-[#3b0764]">{selectedTask.Task}</span>
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="font-semibold">Name:</label>
+                <p>{selectedTask.requestedName}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Email:</label>
+                <p>{selectedTask.email}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Project:</label>
+                <p>{selectedTask.project}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Hours Requested:</label>
+                <p>{selectedTask.hours}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Department:</label>
+                <p>{selectedTask.department}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Requester:</label>
+                <p>{selectedTask.requester}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Notes:</label>
+                <p>{selectedTask.Notes}</p>
+              </div>
+              <div>
+                <label className="font-semibold">Status:</label>
+                <p>{selectedTask.status}</p>
+              </div>
+            </div>
 
-    {/* Approval Panel */}
-    <div className="mt-6 ">
-      <h3 className="text-lg font-semibold mb-4">
-        Approve/Reject Task
-      </h3>
-      <div className="flex flex-col gap-4 min-h-[200px]">
-        {/* Time Picker */}
-        <div>
-          <label className="font-semibold">Select Date and Time:</label>
-          <DateTimePicker
-            onChange={setSelectedDateTime}
-            value={selectedDateTime}
-          />
-        </div>
+            {/* Approval Panel */}
+            <div className="mt-6 ">
+              <h3 className="text-lg font-semibold mb-4">
+                Approve/Reject Task
+              </h3>
+              <div className="flex flex-col gap-4 min-h-[200px]">
+                {/* Time Picker */}
+                <div>
+                  <label className="font-semibold">Select Date and Time:</label>
+                  <DateTimePicker
+                    onChange={setSelectedDateTime}
+                    value={selectedDateTime}
+                  />
+                </div>
 
-        {/* Hours Input */}
-        <div>
-          <label className="font-semibold">Approved Hours:</label>
-          <input
-            type="number"
-            min="1"
-            max={selectedTask?.hours || 8}
-            value={approvedHours}
-            onChange={(e) => setApprovedHours(Number(e.target.value))}
-            className="border p-2 rounded w-20"
-          />
-        </div>
+                {/* Hours Input */}
+                <div>
+                  <label className="font-semibold">Approved Hours:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedTask?.hours || 8}
+                    value={approvedHours}
+                    onChange={(e) => setApprovedHours(Number(e.target.value))}
+                    className="border p-2 rounded w-20"
+                  />
+                </div>
 
- {/* Comment Box (shown only if status is Rejected or being rejected) */}
- {(selectedTask.status === "Rejected" || selectedTask.status === "Pending") && (
-          <div>
-            <label className="font-semibold">
-              Comment (for rejection):
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="border p-2 rounded w-full"
-              rows="3"
-              required
-            />
+                {/* Comment Box (shown only if status is Rejected or being rejected) */}
+                {(selectedTask.status === "Rejected" ||
+                  selectedTask.status === "Pending") && (
+                  <div>
+                    <label className="font-semibold">
+                      Comment (for rejection):
+                    </label>
+                    <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      className="border p-2 rounded w-full"
+                      rows="3"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-4">
+                  {selectedTask.status === "Pending" ? (
+                    <>
+                      <button
+                        onClick={handleApprove}
+                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                      >
+                        <FiCheckCircle /> Approve
+                      </button>
+                      <button
+                        onClick={handleReject}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                      >
+                        <FiXCircle /> Reject
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleUpdateTask}
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                      <FiEdit /> Update
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          {selectedTask.status === "Pending" ? (
-            <>
-              <button
-                onClick={handleApprove}
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              >
-                <FiCheckCircle /> Approve
-              </button>
-              <button
-                onClick={handleReject}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                <FiXCircle /> Reject
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleUpdateTask}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              <FiEdit /> Update
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
 
         {/* Approved/Rejected Tasks */}
         {(approvedTasks.length > 0 || rejectedTasks.length > 0) && (

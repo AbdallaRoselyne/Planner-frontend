@@ -97,7 +97,6 @@ function App() {
             </UserLayout>
           }
         />
-        
 
         {/* Admin Routes - Uses Admin Sidebar */}
         <Route

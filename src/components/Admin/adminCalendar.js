@@ -12,6 +12,7 @@ const CalendarPage = () => {
   const [filters, setFilters] = useState({
     requestedName: "",
     project: "",
+    projectCode: "",
     date: "",
   });
 
@@ -22,7 +23,9 @@ const CalendarPage = () => {
 
   const fetchApprovedTasks = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/tasks?status=Approved");
+      const response = await fetch(
+        "http://localhost:5000/api/tasks?status=Approved"
+      );
       const data = await response.json();
       setApprovedTasks(data);
     } catch (error) {
@@ -35,11 +38,11 @@ const CalendarPage = () => {
   const getDepartmentColorClass = (department) => {
     switch (department) {
       case "LEED":
-        return "event-color-leed"; 
+        return "event-color-leed";
       case "BIM":
-        return "event-color-bim"; 
+        return "event-color-bim";
       case "MEP":
-        return "event-color-mep"; 
+        return "event-color-mep";
       default:
         return "event-color-default"; // Gray for tasks without a department
     }
@@ -64,11 +67,16 @@ const CalendarPage = () => {
 
       const startTime = new Date(userTaskMap[userKey].currentStartTime);
       const endTime = new Date(startTime);
-      endTime.setHours(startTime.getHours() + task.hours);
+      endTime.setHours(startTime.getHours() + task.approvedHours);
 
       // Ensure the task does not exceed the 8-hour workday
-      if (endTime.getHours() > 16 || (endTime.getHours() === 16 && endTime.getMinutes() > 45)) {
-        toast.warning(`Task "${task.Task}" exceeds the 8-hour workday for ${task.requestedName} on ${taskDate}`);
+      if (
+        endTime.getHours() > 16 ||
+        (endTime.getHours() === 16 && endTime.getMinutes() > 45)
+      ) {
+        toast.warning(
+          `Task "${task.Task}" exceeds the 8-hour workday for ${task.requestedName} on ${taskDate}`
+        );
         return; // Skip this task
       }
 
@@ -98,17 +106,29 @@ const CalendarPage = () => {
         }
 
         const taskDate = new Date(task.date).toISOString().split("T")[0];
-        const filterDate = filters.date ? new Date(filters.date).toISOString().split("T")[0] : "";
+        const filterDate = filters.date
+          ? new Date(filters.date).toISOString().split("T")[0]
+          : "";
 
         return (
-          (!filters.requestedName || task.requestedName?.includes(filters.requestedName)) &&
-          (!filters.project || task.project?.includes(filters.project)) &&
+          (!filters.requestedName ||
+            task.requestedName
+              ?.toLowerCase()
+              .includes(filters.requestedName.toLowerCase())) &&
+          (!filters.project ||
+            task.project
+              ?.toLowerCase()
+              .includes(filters.project.toLowerCase())) &&
+          (!filters.projectCode ||
+            task.projectCode
+              ?.toLowerCase()
+              .includes(filters.projectCode.toLowerCase())) &&
           (!filters.date || taskDate === filterDate)
         );
       })
       .map((task) => ({
         ...task,
-        hours: Number(task.hours) || 1, 
+        hours: Number(task.approvedHours) || 1,
       }))
   )
     .map((task) => ({
@@ -120,7 +140,7 @@ const CalendarPage = () => {
       extendedProps: {
         project: task.project,
         requestedName: task.requestedName,
-        hours: task.hours,
+        hours: task.approvedHours ,
         department: task.department, // Include department in extendedProps
       },
     }))
@@ -154,16 +174,31 @@ const CalendarPage = () => {
             type="text"
             placeholder="Filter by Assignee"
             value={filters.requestedName}
-            onChange={(e) => setFilters({ ...filters, requestedName: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, requestedName: e.target.value })
+            }
             className="border p-2 rounded"
           />
           <input
             type="text"
             placeholder="Filter by Project"
             value={filters.project}
-            onChange={(e) => setFilters({ ...filters, project: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, project: e.target.value })
+            }
             className="border p-2 rounded"
           />
+
+          <input
+            type="text"
+            placeholder="Filter by Project Code"
+            value={filters.projectCode}
+            onChange={(e) =>
+              setFilters({ ...filters, projectCode: e.target.value })
+            }
+            className="border p-2 rounded"
+          />
+
           <input
             type="date"
             value={filters.date}
@@ -171,7 +206,9 @@ const CalendarPage = () => {
             className="border p-2 rounded"
           />
           <button
-            onClick={() => setFilters({ requestedName: "", project: "", date: "" })}
+            onClick={() =>
+              setFilters({ requestedName: "", project: "", date: "" })
+            }
             className="bg-[#3b0764] text-white px-4 py-2 rounded hover:bg-[#4c0a86]"
           >
             Clear Filters
@@ -193,9 +230,15 @@ const CalendarPage = () => {
           eventClick={handleEventClick}
           eventContent={(eventInfo) => (
             <div className="p-2">
-              <strong className="block text-sm font-semibold">{eventInfo.event.title}</strong>
-              <p className="text-xs text-gray-600">{eventInfo.event.extendedProps.project}</p>
-              <p className="text-xs text-gray-600">{eventInfo.event.extendedProps.requestedName}</p>
+              <strong className="block text-sm font-semibold">
+                {eventInfo.event.title}
+              </strong>
+              <p className="text-xs text-gray-600">
+                {eventInfo.event.extendedProps.project}
+              </p>
+              <p className="text-xs text-gray-600">
+                {eventInfo.event.extendedProps.requestedName}
+              </p>
               <p className="text-xs text-gray-600">
                 {eventInfo.event.extendedProps.hours} hours
               </p>
@@ -232,13 +275,27 @@ const CalendarPage = () => {
             onClick={(e) => e.stopPropagation()} // Prevent clicks inside the modal from closing it
           >
             <h2 className="text-xl font-bold mb-4">Task Details</h2>
-            <p><strong>Task:</strong> {selectedTask.title}</p>
-            <p><strong>Assignee:</strong> {selectedTask.requestedName}</p>
-            <p><strong>Project:</strong> {selectedTask.project}</p>
-            <p><strong>Department:</strong> {selectedTask.department}</p>
-            <p><strong>Hours:</strong> {selectedTask.hours}</p>
-            <p><strong>Start:</strong> {selectedTask.start.toLocaleString()}</p>
-            <p><strong>End:</strong> {selectedTask.end.toLocaleString()}</p>
+            <p>
+              <strong>Task:</strong> {selectedTask.title}
+            </p>
+            <p>
+              <strong>Assignee:</strong> {selectedTask.requestedName}
+            </p>
+            <p>
+              <strong>Project:</strong> {selectedTask.project}
+            </p>
+            <p>
+              <strong>Department:</strong> {selectedTask.department}
+            </p>
+            <p>
+              <strong>Hours:</strong> {selectedTask.hours}
+            </p>
+            <p>
+              <strong>Start:</strong> {selectedTask.start.toLocaleString()}
+            </p>
+            <p>
+              <strong>End:</strong> {selectedTask.end.toLocaleString()}
+            </p>
             <button
               onClick={closeTaskDetails}
               className="mt-4 bg-[#3b0764] text-white px-4 py-2 rounded hover:bg-[#4c0a86]"

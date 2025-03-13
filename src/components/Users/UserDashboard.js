@@ -1,70 +1,75 @@
-import React from "react";
-import {
-  FiClock,
-  FiCalendar,
-  FiCheckCircle,
-  FiUserPlus,
-  FiLogOut,
-  FiHome,
-} from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const UserDashboard = () => {
+const UserCalendar = ({ userId }) => {
+  const [tasks, setTasks] = useState([]);
+
+  // Fetch tasks for the logged-in user
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/tasks/user/${userId}`);
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        toast.error("Failed to fetch tasks");
+      }
+    };
+
+    fetchTasks();
+  }, [userId]);
+
+  // Format tasks for FullCalendar
+  const calendarEvents = tasks.map((task) => ({
+    id: task._id,
+    title: task.Task,
+    start: task.date,
+    end: new Date(new Date(task.date).getTime() + task.hours * 60 * 60 * 1000), // Calculate end time
+    extendedProps: {
+      project: task.project,
+      requestedName: task.requestedName,
+      hours: task.hours,
+    },
+  }));
+
   return (
-    <div className="flex h-screen">
-      {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-100 min-h-screen">
-        {/* Header */}
-        <div className="flex justify-between items-center bg-white p-4 shadow rounded-lg mb-6">
-          <h1 className="text-2xl font-bold text-[#3b0764]">User Dashboard</h1>
-        </div>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <ToastContainer />
+      <h1 className="text-2xl font-bold text-[#3b0764] mb-6">My Calendar</h1>
 
-        {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Task Requests */}
-          <div className="bg-white p-4 shadow rounded-lg flex items-center">
-            <FiUserPlus className="text-blue-700 text-3xl mr-4" />
-            <div>
-              <h2 className="text-lg font-semibold">Request Team Member</h2>
-              <p className="text-gray-600">
-                Request a member to collaborate on a task.
-              </p>
-            </div>
-          </div>
-
-          {/* Assigned Tasks */}
-          <div className="bg-white p-4 shadow rounded-lg flex items-center">
-            <FiCheckCircle className="text-green-700 text-3xl mr-4" />
-            <div>
-              <h2 className="text-lg font-semibold">Assigned Tasks</h2>
-              <p className="text-gray-600">
-                View your ongoing and completed tasks.
-              </p>
-            </div>
-          </div>
-
-          {/* Time Tracking */}
-          <div className="bg-white p-4 shadow rounded-lg flex items-center">
-            <FiClock className="text-yellow-700 text-3xl mr-4" />
-            <div>
-              <h2 className="text-lg font-semibold">Time Sheet</h2>
-              <p className="text-gray-600">Log your work hours efficiently.</p>
-            </div>
-          </div>
-
-          {/* Calendar Integration */}
-          <div className="bg-white p-4 shadow rounded-lg flex items-center">
-            <FiCalendar className="text-purple-700 text-3xl mr-4" />
-            <div>
-              <h2 className="text-lg font-semibold">Calendar Integration</h2>
-              <p className="text-gray-600">
-                Sync tasks with Microsoft Calendar.
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Calendar */}
+      <div className="bg-white p-6 shadow rounded-lg">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
+          }}
+          events={calendarEvents}
+          height="auto"
+          editable
+          selectable
+          businessHours={{
+            daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
+            startTime: "08:30",
+            endTime: "16:45",
+          }}
+          slotMinTime="08:30:00"
+          slotMaxTime="16:45:00"
+          slotDuration="00:30:00"
+          allDaySlot={false}
+        />
       </div>
     </div>
   );
 };
 
-export default UserDashboard;
+export default UserCalendar;
