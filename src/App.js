@@ -3,11 +3,10 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation,
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Users/Sidebar";
-import AdminSidebar from "./components/Admin/adminSidebar";
+import AdminSidebar from "./components/Admin/Adminsidebar";
 import AboutUs from "./components/AboutUs";
 import Login from "./components/Auth/Login";
 import UserDashboard from "./components/Users/UserDashboard";
@@ -15,10 +14,9 @@ import MembersPage from "./components/Users/requests";
 import TasksPage from "./components/Users/tasks";
 import TimeTrackingPage from "./components/Users/time";
 import AdminMembers from "./components/Admin/adminMembers";
-import AdminCalendar from "./components/Admin/adminCalendar";
-import ApproveTaskRequests from "./components/Admin/adminTasks";
-import BudgetTimeTracking from "./components/Admin/adminBudget";
-import ReportsAnalytics from "./components/Admin/adminReports";
+import AdminCalendar from "./components/Admin/calendar/CalendarPage";
+import BudgetTracking from './components/Admin/Budget/BudgetTracking'; // Updated path
+import AdminApprove from "./components/Admin/AdminApprove"; 
 
 /*Layout for About Us Page */
 function AboutUsLayout({ children }) {
@@ -33,9 +31,9 @@ function AboutUsLayout({ children }) {
 /* Layout for User Pages */
 function UserLayout({ children }) {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 ">{children}</div>
+      <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
     </div>
   );
 }
@@ -43,9 +41,9 @@ function UserLayout({ children }) {
 /* Layout for Admin Pages */
 function AdminLayout({ children }) {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50">
       <AdminSidebar />
-      <div className="flex-1 ">{children}</div>
+      <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
     </div>
   );
 }
@@ -64,7 +62,7 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
 
-        {/* User Routes - Uses User Sidebar */}
+        {/* User Routes */}
         <Route
           path="/dashboard"
           element={
@@ -98,7 +96,7 @@ function App() {
           }
         />
 
-        {/* Admin Routes - Uses Admin Sidebar */}
+        {/* Admin Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -107,7 +105,6 @@ function App() {
             </AdminLayout>
           }
         />
-
         <Route
           path="/admin/users"
           element={
@@ -116,33 +113,23 @@ function App() {
             </AdminLayout>
           }
         />
-
         <Route
           path="/admin/tasks"
           element={
             <AdminLayout>
-              <ApproveTaskRequests />
+              <AdminApprove />
             </AdminLayout>
           }
         />
-
         <Route
           path="/admin/budget"
           element={
             <AdminLayout>
-              <BudgetTimeTracking />
+              <BudgetTracking />
             </AdminLayout>
           }
         />
-
-        <Route
-          path="/admin/reports"
-          element={
-            <AdminLayout>
-              <ReportsAnalytics />
-            </AdminLayout>
-          }
-        />
+        
       </Routes>
     </Router>
   );

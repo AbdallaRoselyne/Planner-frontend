@@ -7,10 +7,12 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@mui/styles": "^6.4.9",
     "axios": "^1.7.9",
     "bcryptjs": "^3.0.0",
     "cra-template": "1.2.0",
     "express-session": "^1.18.1",
+    "file-saver": "^2.0.5",
     "lodash.debounce": "^4.0.8",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
@@ -25,7 +27,8 @@
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.1",
-    "web-vitals": "^4.2.4"
+    "web-vitals": "^4.2.4",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",

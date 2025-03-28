@@ -3,6 +3,7 @@ import { FiClock, FiCalendar, FiCheckCircle, FiUserPlus, FiLogOut, FiHome } from
 
 
 const Sidebar = () => {
+    
     return (
         <div className="w-64 bg-[#3b0764] text-white flex flex-col p-6">
         <div className="text-large font-bold mb-8">
