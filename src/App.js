@@ -1,3 +1,4 @@
+// src/App.js
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -9,14 +10,14 @@ import Sidebar from "./components/Users/Sidebar";
 import AdminSidebar from "./components/Admin/Adminsidebar";
 import AboutUs from "./components/AboutUs";
 import Login from "./components/Auth/Login";
-import UserDashboard from "./components/Users/UserDashboard";
-import MembersPage from "./components/Users/requests";
-import TasksPage from "./components/Users/tasks";
-import TimeTrackingPage from "./components/Users/time";
+import UserDashboard from "./components/Users/UserCalendar/UserCalendar";
+import RequestsPage from "./components/Users/requests/RequestsPage";
+import Timesheet from "./components/Users/Tasks/Timesheet";
 import AdminMembers from "./components/Admin/adminMembers";
 import AdminCalendar from "./components/Admin/calendar/CalendarPage";
-import BudgetTracking from './components/Admin/Budget/BudgetTracking'; // Updated path
+import BudgetTracking from './components/Admin/Budget/BudgetTracking';
 import AdminApprove from "./components/Admin/AdminApprove"; 
+import TaskList from "./components/Users/Tasks/TaskList"; 
 
 /*Layout for About Us Page */
 function AboutUsLayout({ children }) {
@@ -75,7 +76,7 @@ function App() {
           path="/members"
           element={
             <UserLayout>
-              <MembersPage />
+              <RequestsPage />
             </UserLayout>
           }
         />
@@ -83,15 +84,15 @@ function App() {
           path="/tasks"
           element={
             <UserLayout>
-              <TasksPage />
+              <TaskList /> {/* Changed from TasksPage to TaskList */}
             </UserLayout>
           }
         />
         <Route
-          path="/time"
+          path="/timesheet"
           element={
             <UserLayout>
-              <TimeTrackingPage />
+              <Timesheet />
             </UserLayout>
           }
         />
@@ -129,7 +130,6 @@ function App() {
             </AdminLayout>
           }
         />
-        
       </Routes>
     </Router>
   );

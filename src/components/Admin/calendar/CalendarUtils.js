@@ -18,58 +18,84 @@ export const getDepartmentColorClass = (department) => {
     MEP: "event-color-mep",
     default: "event-color-default",
   };
-  return departmentColors[department] || departmentColors.default;
+  return departmentColors[department?.toUpperCase()] || departmentColors.default;
 };
 
 export const scheduleTasksSequentially = (tasks) => {
-  const userTaskMap = {};
+  const scheduledTasks = [];
+  const userDayMap = {}; // Format: { "user@email-YYYY-MM-DD": { nextAvailableTime: Date } }
 
-  tasks.forEach((task) => {
-    if (!task.date || isNaN(new Date(task.date).getTime())) {
-      console.error("Invalid date for task:", task);
-      return;
+  // First, process tasks that already have scheduled times
+  tasks.forEach(task => {
+    if (task.start && task.end) {
+      const dateKey = new Date(task.start).toISOString().split('T')[0];
+      const userKey = `${task.email || task.requestedName}-${dateKey}`;
+      
+      scheduledTasks.push(task);
+      
+      // Update the user's next available time
+      if (!userDayMap[userKey] || new Date(task.end) > userDayMap[userKey].nextAvailableTime) {
+        userDayMap[userKey] = {
+          nextAvailableTime: new Date(task.end)
+        };
+      }
     }
-
-    const taskDate = new Date(task.date).toISOString().split("T")[0];
-    const userKey = `${task.requestedName}-${taskDate}`;
-
-    if (!userTaskMap[userKey]) {
-      userTaskMap[userKey] = {
-        currentStartTime: new Date(task.date),
-        tasks: [],
-      };
-      userTaskMap[userKey].currentStartTime.setHours(8, 30, 0, 0);
-    }
-
-    const startTime = new Date(userTaskMap[userKey].currentStartTime);
-    const endTime = new Date(startTime);
-    endTime.setHours(startTime.getHours() + (Number(task.approvedHours) || 1));
-
-    if (
-      endTime.getHours() > 16 ||
-      (endTime.getHours() === 16 && endTime.getMinutes() > 45)
-    ) {
-      console.warn(
-        `Task "${task.Task}" exceeds workday for ${task.requestedName}`
-      );
-      return;
-    }
-
-    userTaskMap[userKey].tasks.push({
-      ...task,
-      start: startTime.toISOString(),
-      end: endTime.toISOString(),
-    });
-
-    userTaskMap[userKey].currentStartTime = endTime;
   });
 
-  return Object.values(userTaskMap).flatMap((userTasks) => userTasks.tasks);
+  // Then process unscheduled tasks
+  const unscheduledTasks = tasks.filter(task => !task.start || !task.end);
+  
+  // Sort by creation date or priority if needed
+  unscheduledTasks.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  unscheduledTasks.forEach(task => {
+    const taskDate = task.date || task.weekHours?.[0]?.date;
+    if (!taskDate) return;
+
+    const dateKey = new Date(taskDate).toISOString().split('T')[0];
+    const userKey = `${task.email || task.requestedName}-${dateKey}`;
+
+    // Initialize if new user/day
+    if (!userDayMap[userKey]) {
+      userDayMap[userKey] = {
+        nextAvailableTime: new Date(taskDate)
+      };
+      // Set to 8:30 AM
+      userDayMap[userKey].nextAvailableTime.setHours(8, 30, 0, 0);
+    }
+
+    const duration = Math.max(task.approvedHours || task.hours || 1, 0.5);
+    const start = new Date(userDayMap[userKey].nextAvailableTime);
+    const end = new Date(start);
+    end.setHours(start.getHours() + Math.floor(duration));
+    end.setMinutes(start.getMinutes() + ((duration % 1) * 60));
+
+    // Check against 4:45 PM end time
+    const dayEnd = new Date(start);
+    dayEnd.setHours(16, 45, 0, 0);
+
+    if (end > dayEnd) {
+      console.warn(`Task doesn't fit in workday: ${task.Task}`);
+      return;
+    }
+
+    scheduledTasks.push({
+      ...task,
+      start: start.toISOString(),
+      end: end.toISOString()
+    });
+
+    // Update for next task
+    userDayMap[userKey].nextAvailableTime = new Date(end);
+  });
+
+  return scheduledTasks;
 };
+
 
 export const filterTasks = (tasks, filters) => {
   return tasks.filter((task) => {
-    const taskDate = new Date(task.date).toISOString().split("T")[0];
+    const taskDate = new Date(task.date || task.weekHours?.[0]?.date).toISOString().split("T")[0];
     const filterDate = filters.date
       ? new Date(filters.date).toISOString().split("T")[0]
       : "";
@@ -91,21 +117,15 @@ export const filterTasks = (tasks, filters) => {
 };
 
 export const exportToCSV = (events) => {
-  // First ensure all dates are Date objects
   const processedEvents = events.map((event) => ({
     ...event,
     start: new Date(event.start),
     end: new Date(event.end),
   }));
 
-  // Sort events by date and time
-  const sortedEvents = [...processedEvents].sort((a, b) => {
-    return a.start - b.start;
-  });
+  const sortedEvents = [...processedEvents].sort((a, b) => a.start - b.start);
 
-  // Group by date for timetable format
   const timetable = {};
-
   sortedEvents.forEach((event) => {
     const dateStr = event.start.toISOString().split("T")[0];
     const timeSlot = `${event.start.toLocaleTimeString([], {
@@ -130,12 +150,9 @@ export const exportToCSV = (events) => {
     });
   });
 
-  // Create CSV content with timetable format
   let csvContent = "Date,Time,Assignee,Task,Project,Department,Hours\n";
-
   Object.entries(timetable).forEach(([date, entries]) => {
     const formattedDate = new Date(date).toLocaleDateString();
-
     entries.forEach((entry) => {
       csvContent +=
         [
@@ -150,7 +167,6 @@ export const exportToCSV = (events) => {
     });
   });
 
-  // Create and download CSV file
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

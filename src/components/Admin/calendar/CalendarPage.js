@@ -14,7 +14,8 @@ import {
   fetchApprovedTasks,
   scheduleTasksSequentially,
   filterTasks,
-  getDepartmentColorClass
+  getDepartmentColorClass,
+  exportToCSV,
 } from "./CalendarUtils";
 
 const CalendarPage = () => {
@@ -26,7 +27,7 @@ const CalendarPage = () => {
     requestedName: "",
     project: "",
     projectCode: "",
-    date: ""
+    date: "",
   });
 
   const calendarRef = useRef(null);
@@ -48,15 +49,14 @@ const CalendarPage = () => {
 
   const handleNavigate = (action) => {
     const calendarApi = calendarRef.current.getApi();
-    
     switch (action) {
-      case 'PREV':
+      case "PREV":
         calendarApi.prev();
         break;
-      case 'NEXT':
+      case "NEXT":
         calendarApi.next();
         break;
-      case 'TODAY':
+      case "TODAY":
         calendarApi.today();
         break;
       default:
@@ -65,25 +65,33 @@ const CalendarPage = () => {
   };
 
   const handleViewChange = (newView) => {
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.changeView(newView);
+    setView(newView);
+  };
+
+  const handleExport = () => {
+    const filteredTasks = filterTasks(approvedTasks, filters);
+    const scheduledEvents = scheduleTasksSequentially(filteredTasks);
+    exportToCSV(
+      scheduledEvents.map((event) => ({
+        ...event,
+        title: `${event.Task} (${event.requestedName})`,
+        extendedProps: event,
+      }))
+    );
   };
 
   const filteredTasks = filterTasks(approvedTasks, filters);
   const scheduledEvents = scheduleTasksSequentially(filteredTasks);
-  
+
   const calendarEvents = scheduledEvents.map((task) => ({
-    id: task._id,
-    title: task.Task,
+    id: task._id || `${task.Task}-${task.requestedName}-${task.start}`,
+    title: `${task.Task} (${task.requestedName})`,
     start: task.start,
     end: task.end,
     className: getDepartmentColorClass(task.department),
     extendedProps: {
-      project: task.project,
-      requestedName: task.requestedName,
-      hours: task.approvedHours,
-      department: task.department,
-      status: task.status || "Approved"
+      ...task,
+      hours: task.duration || task.approvedHours || task.hours,
     },
   }));
 
@@ -102,7 +110,9 @@ const CalendarPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Task Calendar</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+              Task Calendar
+            </h1>
             <p className="text-gray-600">View and manage all approved tasks</p>
           </div>
           <div className="flex items-center space-x-2">
@@ -114,15 +124,16 @@ const CalendarPage = () => {
         </div>
 
         <CalendarFilters filters={filters} setFilters={setFilters} />
-        
+
         <div className="bg-white p-4 md:p-6 shadow rounded-xl border border-gray-100">
-          <CalendarToolbar 
-            events={calendarEvents} 
-            view={view} 
+          <CalendarToolbar
+            events={calendarEvents}
+            view={view}
             setView={handleViewChange}
             onNavigate={handleNavigate}
+            onExport={handleExport}
           />
-          
+
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
@@ -143,21 +154,21 @@ const CalendarPage = () => {
                   <div className="h-full rounded-md p-1 flex flex-col">
                     <div className="flex justify-between items-start">
                       <strong className="block text-sm font-semibold truncate-text">
-                        {eventInfo.event.title}
+                        {eventInfo.event.title.split(" (")[0]}
                       </strong>
                       <span className="text-xs bg-gray-100 px-1 rounded whitespace-nowrap">
                         {eventInfo.event.extendedProps.hours}h
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1 truncate-text">
-                      {eventInfo.event.extendedProps.project || '...'}
+                      {eventInfo.event.extendedProps.project || "..."}
                     </p>
                     <p className="text-xs text-gray-600 truncate-text">
-                      {eventInfo.event.extendedProps.requestedName || '...'}
+                      {eventInfo.event.extendedProps.requestedName || "..."}
                     </p>
                     <div className="mt-auto pt-1">
                       <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-opacity-20 bg-gray-500 truncate-text">
-                        {eventInfo.event.extendedProps.department || '...'}
+                        {eventInfo.event.extendedProps.department || "..."}
                       </span>
                     </div>
                   </div>
@@ -167,25 +178,25 @@ const CalendarPage = () => {
               editable
               selectable
               businessHours={{
-                daysOfWeek: [1, 2, 3, 4, 5],
+                daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
                 startTime: "08:30",
                 endTime: "16:45",
               }}
-              slotMinTime="08:30:00"
-              slotMaxTime="16:45:00"
-              slotDuration="00:30:00"
+              slotMinTime="08:00:00" // Show from 8:00 AM
+              slotMaxTime="17:00:00" // Show until 5:00 PM
+              slotDuration="00:30:00" // 30-minute slots
               allDaySlot={false}
               nowIndicator
-              dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
+              dayHeaderFormat={{ weekday: "short", day: "numeric" }}
               dayHeaderClassNames="font-medium text-gray-700"
             />
           )}
         </div>
       </div>
 
-      <CalendarEventModal 
-        selectedTask={selectedTask} 
-        closeTaskDetails={() => setSelectedTask(null)} 
+      <CalendarEventModal
+        selectedTask={selectedTask}
+        closeTaskDetails={() => setSelectedTask(null)}
       />
     </div>
   );
