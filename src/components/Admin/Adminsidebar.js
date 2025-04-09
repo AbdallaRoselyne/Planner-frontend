@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiUsers, FiClipboard, FiDollarSign, FiBarChart2, FiLogOut, FiHome, FiCalendar, FiMenu, FiX } from "react-icons/fi";
+import { FiUsers, FiClipboard, FiDollarSign, FiBarChart2, FiLogOut, FiHome, FiCalendar, FiMenu, FiX, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const AdminSidebar = () => {
@@ -72,6 +72,14 @@ const AdminSidebar = () => {
             onClick={() => isMobile && setIsOpen(false)}
           >
             <FiDollarSign className="text-xl" /> Budget & Time Tracking
+          </Link>
+
+          <Link
+             to="/admin/timesheet"
+             className="flex items-center gap-2 p-2 hover:bg-[#374151] rounded"
+              onClick={() => isMobile && setIsOpen(false)}
+          >
+            <FiClock className="text-xl" /> Timesheet
           </Link>
         </nav>
         

@@ -12,12 +12,13 @@ import AboutUs from "./components/AboutUs";
 import Login from "./components/Auth/Login";
 import UserDashboard from "./components/Users/UserCalendar/UserCalendar";
 import RequestsPage from "./components/Users/requests/RequestsPage";
-import Timesheet from "./components/Users/Tasks/Timesheet";
 import AdminMembers from "./components/Admin/adminMembers";
 import AdminCalendar from "./components/Admin/calendar/CalendarPage";
 import BudgetTracking from './components/Admin/Budget/BudgetTracking';
 import AdminApprove from "./components/Admin/AdminApprove"; 
 import TaskList from "./components/Users/Tasks/TaskList"; 
+import UserTimesheet from "./components/Users/Tasks/Timesheet";
+import AdminTimesheet from "./components/Admin/AdminTimesheet"; 
 
 /*Layout for About Us Page */
 function AboutUsLayout({ children }) {
@@ -92,7 +93,7 @@ function App() {
           path="/timesheet"
           element={
             <UserLayout>
-              <Timesheet />
+              <UserTimesheet />
             </UserLayout>
           }
         />
@@ -127,6 +128,14 @@ function App() {
           element={
             <AdminLayout>
               <BudgetTracking />
+            </AdminLayout>
+          }
+        />
+        <Route
+          path="/admin/timesheet"
+          element={
+            <AdminLayout>
+              <AdminTimesheet />
             </AdminLayout>
           }
         />
